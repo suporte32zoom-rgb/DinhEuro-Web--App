@@ -197,6 +197,63 @@ app.post("/api/webhook/finnhub", (req, res) => {
   processarEventoEmBackground(eventData);
 });
 
+// Financial Modeling Prep (FMP) Endpoints
+const FMP_KEY = process.env.FMP_API_KEY || "GJaGtHdggEtpz6erXjYrSNchdFk8FJwm";
+const FMP_URL = "https://financialmodelingprep.com/stable";
+
+app.get("/api/fmp/quote", async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const url = `${FMP_URL}/quote?symbol=${encodeURIComponent(symbol)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    const data = await response.json();
+    res.json(Array.isArray(data) && data.length > 0 ? data[0] : null);
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Erro FMP Quote" });
+  }
+});
+
+app.get("/api/fmp/profile", async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const url = `${FMP_URL}/profile?symbol=${encodeURIComponent(symbol)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    const data = await response.json();
+    res.json(Array.isArray(data) && data.length > 0 ? data[0] : null);
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Erro FMP Profile" });
+  }
+});
+
+app.get("/api/fmp/financials", async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const url = `${FMP_URL}/income-statement?symbol=${encodeURIComponent(symbol)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    const data = await response.json();
+    res.json(Array.isArray(data) ? data : []);
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Erro FMP Financials" });
+  }
+});
+
+app.get("/api/fmp/search", async (req, res) => {
+  try {
+    const query = String(req.query.query || "").trim();
+    if (!query) return res.json([]);
+    const url = `${FMP_URL}/search-symbol?query=${encodeURIComponent(query)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    const data = await response.json();
+    res.json(Array.isArray(data) ? data : []);
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Erro FMP Search" });
+  }
+});
+
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", mode: "production", service: "DinhEuro Hostinger Engine", timestamp: new Date().toISOString() });

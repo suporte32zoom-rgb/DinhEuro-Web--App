@@ -23,9 +23,18 @@ import {
   Share2,
   MessageSquare,
   Bell,
+  FileText,
+  BarChart3,
+  PieChart,
 } from "lucide-react";
 import { formatAssetDisplayPrice } from "../utils/formatters";
 import { getAssetSector, getAssetTags, SECTOR_DEFINITIONS } from "../utils/assetTaxonomy";
+import {
+  obterPerfilFMP,
+  obterDemonstracaoResultadosFMP,
+  FMPCompanyProfile,
+  FMPIncomeStatement,
+} from "../services/fmpService";
 
 interface AssetDetailViewProps {
   asset: Asset;
@@ -59,6 +68,42 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
   } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Financial Modeling Prep (FMP) States
+  const [fmpProfile, setFmpProfile] = useState<FMPCompanyProfile | null>(null);
+  const [fmpFinancials, setFmpFinancials] = useState<FMPIncomeStatement[] | null>(null);
+  const [fmpLoading, setFmpLoading] = useState(false);
+
+  // Fetch FMP Company Profile & Financial Statements (DRE)
+  useEffect(() => {
+    let isMounted = true;
+    const cleanTicker = asset.ticker.replace(/^\./, "").replace(/\.SA$/, "").trim().toUpperCase();
+
+    if (cleanTicker && !cleanTicker.includes("/")) {
+      setFmpLoading(true);
+      Promise.all([
+        obterPerfilFMP(cleanTicker),
+        obterDemonstracaoResultadosFMP(cleanTicker),
+      ])
+        .then(([profile, financials]) => {
+          if (isMounted) {
+            setFmpProfile(profile);
+            setFmpFinancials(financials);
+            setFmpLoading(false);
+          }
+        })
+        .catch(() => {
+          if (isMounted) setFmpLoading(false);
+        });
+    } else {
+      setFmpProfile(null);
+      setFmpFinancials(null);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [asset.ticker]);
 
   // Fetch AI asset analysis on load with real current price
   useEffect(() => {
@@ -115,6 +160,17 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
 
   const formatPrice = (price: number, currency: string) =>
     formatAssetDisplayPrice(price, currency);
+
+  const formatLargeCurrency = (value: number, curr: string = "USD") => {
+    if (!value || isNaN(value)) return "--";
+    const abs = Math.abs(value);
+    const prefix = curr === "BRL" ? "R$ " : curr === "EUR" ? "€ " : "US$ ";
+    const sign = value < 0 ? "-" : "";
+    if (abs >= 1e12) return `${sign}${prefix}${(abs / 1e12).toFixed(2)} Tri`;
+    if (abs >= 1e9) return `${sign}${prefix}${(abs / 1e9).toFixed(2)} Bi`;
+    if (abs >= 1e6) return `${sign}${prefix}${(abs / 1e6).toFixed(1)} Mi`;
+    return `${sign}${prefix}${abs.toLocaleString()}`;
+  };
 
   const handleShare = () => {
     if (navigator.clipboard) {
@@ -211,6 +267,13 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
         <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
+              {fmpProfile?.image && (
+                <img
+                  src={fmpProfile.image}
+                  alt={fmpProfile.companyName || asset.name}
+                  className="w-7 h-7 rounded-lg bg-white p-0.5 object-contain border border-[#30363d] shrink-0 shadow-xs"
+                />
+              )}
               <span className="font-mono text-xl sm:text-2xl font-black text-[#58a6ff]">
                 {asset.ticker}
               </span>
@@ -517,6 +580,75 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. Demonstrativo de Resultados & Finanças (Financial Modeling Prep API) */}
+        {fmpFinancials && fmpFinancials.length > 0 && (
+          <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-5 shadow-lg shadow-black/20">
+            <div className="pb-3 border-b border-[#21262d] mb-4 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#58a6ff]" />
+                <h3 className="text-sm font-bold text-[#e6edf3] tracking-wide uppercase">
+                  Demonstrações Financeiras & DRE • FMP
+                </h3>
+              </div>
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-[#58a6ff]/10 text-[#58a6ff] border border-[#58a6ff]/20 font-semibold">
+                Financial Modeling Prep API
+              </span>
+            </div>
+
+            <p className="text-xs text-[#8b949e] mb-3">
+              Dados financeiros auditados dos últimos exercícios fiscais obtidos diretamente dos relatórios oficiais (10-K / CVM).
+            </p>
+
+            <div className="overflow-x-auto scrollbar-none">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#30363d]/60 text-[#8b949e]">
+                    <th className="py-2.5 px-3 font-semibold">Exercício / Data</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Receita Líquida</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Lucro Bruto</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Margem Bruta</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Lucro Operacional</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Lucro Líquido</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Margem Líquida</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">LPA (EPS)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#21262d]">
+                  {fmpFinancials.slice(0, 4).map((fin, idx) => (
+                    <tr key={idx} className="hover:bg-[#21262d]/50 transition-colors">
+                      <td className="py-3 px-3 font-mono font-bold text-white">
+                        {fin.fiscalYear || fin.date.slice(0, 4)} ({fin.period || "FY"})
+                        <span className="block text-[10px] text-[#8b949e] font-normal">{fin.date}</span>
+                      </td>
+                      <td className="py-3 px-3 font-mono text-right text-[#e6edf3] font-semibold">
+                        {formatLargeCurrency(fin.revenue, fin.reportedCurrency)}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-right text-[#e6edf3]">
+                        {formatLargeCurrency(fin.grossProfit, fin.reportedCurrency)}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-right text-[#00c853]">
+                        {((fin.grossProfitRatio || 0) * 100).toFixed(1)}%
+                      </td>
+                      <td className="py-3 px-3 font-mono text-right text-[#e6edf3]">
+                        {formatLargeCurrency(fin.operatingIncome, fin.reportedCurrency)}
+                      </td>
+                      <td className={`py-3 px-3 font-mono text-right font-bold ${fin.netIncome >= 0 ? "text-[#00c853]" : "text-[#ff5252]"}`}>
+                        {formatLargeCurrency(fin.netIncome, fin.reportedCurrency)}
+                      </td>
+                      <td className={`py-3 px-3 font-mono text-right font-semibold ${fin.netIncomeRatio >= 0 ? "text-[#00c853]" : "text-[#ff5252]"}`}>
+                        {((fin.netIncomeRatio || 0) * 100).toFixed(1)}%
+                      </td>
+                      <td className="py-3 px-3 font-mono text-right text-[#58a6ff] font-bold">
+                        ${fin.eps !== undefined ? fin.eps.toFixed(2) : "--"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

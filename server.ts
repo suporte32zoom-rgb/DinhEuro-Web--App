@@ -338,6 +338,81 @@ app.post("/api/webhook/finnhub", (req, res) => {
   processarEventoEmBackground(eventData);
 });
 
+// ==========================================
+// Financial Modeling Prep (FMP) Proxy Routes
+// ==========================================
+const FMP_KEY = process.env.FMP_API_KEY || "GJaGtHdggEtpz6erXjYrSNchdFk8FJwm";
+const FMP_URL = "https://financialmodelingprep.com/stable";
+
+// 1. Real-time Quote Proxy
+app.get("/api/fmp/quote", async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const url = `${FMP_URL}/quote?symbol=${encodeURIComponent(symbol)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    }
+    const data = await response.json();
+    res.json(Array.isArray(data) && data.length > 0 ? data[0] : null);
+  } catch (error: any) {
+    console.error("[Server] Error in /api/fmp/quote:", error);
+    res.status(500).json({ success: false, error: "Erro ao consultar cotação FMP" });
+  }
+});
+
+// 2. Company Profile Proxy
+app.get("/api/fmp/profile", async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const url = `${FMP_URL}/profile?symbol=${encodeURIComponent(symbol)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    }
+    const data = await response.json();
+    res.json(Array.isArray(data) && data.length > 0 ? data[0] : null);
+  } catch (error: any) {
+    console.error("[Server] Error in /api/fmp/profile:", error);
+    res.status(500).json({ success: false, error: "Erro ao consultar perfil corporativo FMP" });
+  }
+});
+
+// 3. Income Statement / DRE Proxy
+app.get("/api/fmp/financials", async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const url = `${FMP_URL}/income-statement?symbol=${encodeURIComponent(symbol)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    }
+    const data = await response.json();
+    res.json(Array.isArray(data) ? data : []);
+  } catch (error: any) {
+    console.error("[Server] Error in /api/fmp/financials:", error);
+    res.status(500).json({ success: false, error: "Erro ao consultar DRE FMP" });
+  }
+});
+
+// 4. Symbol Search Proxy
+app.get("/api/fmp/search", async (req, res) => {
+  try {
+    const query = String(req.query.query || "").trim();
+    if (!query) return res.json([]);
+    const url = `${FMP_URL}/search-symbol?query=${encodeURIComponent(query)}&apikey=${FMP_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, error: `FMP HTTP ${response.status}` });
+    }
+    const data = await response.json();
+    res.json(Array.isArray(data) ? data : []);
+  } catch (error: any) {
+    console.error("[Server] Error in /api/fmp/search:", error);
+    res.status(500).json({ success: false, error: "Erro na pesquisa FMP" });
+  }
+});
+
 // API: Historical Chart Data for any ticker & period
 app.get("/api/market/chart", async (req, res) => {
   try {
