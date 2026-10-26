@@ -130,6 +130,73 @@ app.get("/api/market/quotes", async (req, res) => {
   }
 });
 
+// Endpoint de Cotação da Finnhub
+app.get("/api/finnhub/quote", async (req, res) => {
+  try {
+    const rawSymbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
+    const apiKey = process.env.FINNHUB_API_KEY || "dbfsnl9r01qiahublh30dbfsnl9r01qiahublh3g";
+
+    let symbol = rawSymbol;
+    if (symbol === "S&P 500" || symbol === "SP500") symbol = "SPY";
+    if (symbol === "NASDAQ") symbol = "QQQ";
+    if (symbol === "DOW JONES" || symbol === "DOW") symbol = "DIA";
+
+    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, error: `Erro HTTP Finnhub: status ${response.status}` });
+    }
+
+    const data = await response.json();
+    const resultado = {
+      simbolo: rawSymbol,
+      precoAtual: data.c,
+      variacao: data.d,
+      percentualVariacao: data.dp,
+      maximaDia: data.h,
+      minimaDia: data.l,
+      abertura: data.o,
+      fechamentoAnterior: data.pc,
+    };
+
+    res.json(resultado);
+  } catch (error) {
+    console.error("Erro em /api/finnhub/quote:", error);
+    res.status(500).json({ success: false, error: "Falha ao obter cotação Finnhub" });
+  }
+});
+
+/**
+ * Função para processar os dados do evento recebido sem bloquear a resposta HTTP
+ */
+async function processarEventoEmBackground(data) {
+  try {
+    console.log("Processando evento da Finnhub:", typeof data === "object" ? JSON.stringify(data) : data);
+  } catch (error) {
+    console.error("Erro ao processar dados do webhook:", error);
+  }
+}
+
+// Endpoint do Webhook Finnhub
+app.post("/api/webhook/finnhub", (req, res) => {
+  const secretHeader = req.headers["x-finnhub-secret"];
+  const expectedSecret = process.env.FINNHUB_WEBHOOK_SECRET || "dbfsnl9r01qiahublh4g";
+
+  // 1. Validação de Segurança do Cabeçalho
+  if (!secretHeader || secretHeader !== expectedSecret) {
+    console.warn("Tentativa de webhook não autorizada recebida.");
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  // 2. Confirmação imediata do recebimento (Status 200 OK)
+  res.status(200).json({ received: true });
+
+  // 3. Processamento posterior dos dados em segundo plano
+  const eventData = req.body;
+  processarEventoEmBackground(eventData);
+});
+
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", mode: "production", service: "DinhEuro Hostinger Engine", timestamp: new Date().toISOString() });
