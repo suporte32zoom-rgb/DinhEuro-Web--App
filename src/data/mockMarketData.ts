@@ -7,6 +7,7 @@ import {
   HistoricalPoint,
   ChartPeriod,
 } from "../types/finance";
+import { getAssetSector, getAssetTags } from "../utils/assetTaxonomy";
 
 // Helper to generate realistic historical curves
 function generateTimeSeries(
@@ -113,7 +114,7 @@ function getSparkline(basePrice: number, isPositive: boolean): number[] {
   return points;
 }
 
-export const ALL_ASSETS: Asset[] = [
+const RAW_ASSETS: Asset[] = [
   // --- EUA ---
   {
     id: "dow-jones",
@@ -1576,6 +1577,12 @@ export const ALL_ASSETS: Asset[] = [
     relatedAssetIds: ["sp-500", "dow-jones", "nasdaq", "vix"],
   },
 ];
+
+export const ALL_ASSETS: Asset[] = RAW_ASSETS.map((asset) => ({
+  ...asset,
+  sector: asset.sector || getAssetSector(asset),
+  tags: asset.tags || getAssetTags(asset),
+}));
 
 // Map of AI Accordion topics by Regional Tab
 export const AI_MARKET_TOPICS_BY_REGION: Record<RegionalTab, AIAccordionTopic[]> = {

@@ -47,12 +47,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   const pool = liveAssets;
 
   const filteredAssets = query.trim()
-    ? pool.filter(
-        (a) =>
-          a.ticker.toLowerCase().includes(query.toLowerCase()) ||
-          a.name.toLowerCase().includes(query.toLowerCase()) ||
-          a.category.toLowerCase().includes(query.toLowerCase())
-      )
+    ? pool.filter((a) => {
+        const q = query.toLowerCase();
+        const sector = (a.sector || "").toLowerCase();
+        const tags = (a.tags || []).map((t) => t.toLowerCase());
+        return (
+          a.ticker.toLowerCase().includes(q) ||
+          a.name.toLowerCase().includes(q) ||
+          a.category.toLowerCase().includes(q) ||
+          sector.includes(q) ||
+          tags.some((t) => t.includes(q))
+        );
+      })
     : pool.slice(0, 8); // default suggestions
 
   return (
@@ -115,6 +121,11 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                         <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#0e1117] text-[#8b949e] border border-[#30363d] shrink-0 font-medium">
                           {asset.category}
                         </span>
+                        {asset.sector && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#58a6ff]/10 text-[#58a6ff] border border-[#58a6ff]/30 shrink-0 font-semibold">
+                            {asset.sector}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-[#8b949e] truncate mt-0.5" title={asset.name}>
                         {asset.name}

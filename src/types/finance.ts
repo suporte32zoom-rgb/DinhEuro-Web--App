@@ -58,11 +58,27 @@ export interface InstitutionalProfile {
   currency: string;
 }
 
+export type AssetSector =
+  | "Tech"
+  | "Energy"
+  | "Crypto"
+  | "Finance"
+  | "Materials"
+  | "Industry"
+  | "Consumer"
+  | "Utilities"
+  | "Commodities"
+  | "Forex"
+  | "Indices"
+  | string;
+
 export interface Asset {
   id: string;
   ticker: string;
   name: string;
   category: RegionalTab;
+  sector?: AssetSector;
+  tags?: string[];
   currency: string;
   price: number;
   change: number;

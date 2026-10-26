@@ -17,6 +17,7 @@ import {
 import { getStoredQuotes } from "./services/apiService";
 import { Header } from "./components/Header";
 import { NavigationTabs } from "./components/NavigationTabs";
+import { SectorFilterBar } from "./components/SectorFilterBar";
 import { DynamicIndicesCarousel } from "./components/DynamicIndicesCarousel";
 import { GlobalEconomyWidget } from "./components/GlobalEconomyWidget";
 import { AIMarketSummaryAccordion } from "./components/AIMarketSummaryAccordion";
@@ -42,6 +43,11 @@ import { usePWA } from "./hooks/usePWA";
 export default function App() {
   const [activeTab, setActiveTab] = useState<RegionalTab>("América Latina");
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+
+  // Sector & Custom Tags Filter State
+  const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [activeTag, setActiveTag] = useState<string>("");
+  const [groupBySector, setGroupBySector] = useState<boolean>(false);
 
   // Live real-time market feeds state (Pre-loaded from localStorage cache)
   const [liveAssets, setLiveAssets] = useState<Asset[]>(() => {
@@ -460,12 +466,28 @@ export default function App() {
               }}
             />
 
-            {/* Dynamic Indices Carousel */}
+            {/* Setores & Tags Customizadas Filter Bar */}
+            <SectorFilterBar
+              assets={liveAssets}
+              selectedSector={selectedSector}
+              onSelectSector={setSelectedSector}
+              groupBySector={groupBySector}
+              onToggleGroupBySector={setGroupBySector}
+              activeTag={activeTag}
+              onSelectTag={setActiveTag}
+            />
+
+            {/* Dynamic Indices Carousel (com suporte a filtros e agrupamento setorial) */}
             <DynamicIndicesCarousel
               assets={liveAssets}
               activeTab={activeTab}
               onSelectAsset={handleSelectAsset}
               isLoading={isRefreshing && liveAssets.length === 0}
+              selectedSector={selectedSector}
+              activeTag={activeTag}
+              groupBySector={groupBySector}
+              onSelectSector={setSelectedSector}
+              onSelectTag={setActiveTag}
             />
 
             {/* Global Economy & AwesomeAPI Live Indicators */}

@@ -25,6 +25,7 @@ import {
   Bell,
 } from "lucide-react";
 import { formatAssetDisplayPrice } from "../utils/formatters";
+import { getAssetSector, getAssetTags, SECTOR_DEFINITIONS } from "../utils/assetTaxonomy";
 
 interface AssetDetailViewProps {
   asset: Asset;
@@ -209,7 +210,7 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
         {/* 1. Asset Header Info Hero Card */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <span className="font-mono text-xl sm:text-2xl font-black text-[#58a6ff]">
                 {asset.ticker}
               </span>
@@ -219,6 +220,36 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
               <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#0e1117] text-[#8b949e] border border-[#30363d]">
                 {asset.category}
               </span>
+
+              {/* Setor & Tags */}
+              {(() => {
+                const sector = getAssetSector(asset);
+                const tags = getAssetTags(asset);
+                const secDef = SECTOR_DEFINITIONS[sector] || SECTOR_DEFINITIONS.Indices;
+                return (
+                  <>
+                    <span
+                      className="px-2.5 py-0.5 rounded-md text-xs font-bold"
+                      style={{
+                        backgroundColor: secDef.bgColor,
+                        color: secDef.color,
+                        border: `1px solid ${secDef.borderColor}`,
+                      }}
+                    >
+                      {secDef.name}
+                    </span>
+                    {tags.map((t) => (
+                      <span
+                        key={t}
+                        className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-[#0e1117] text-[#8b949e] border border-[#30363d]"
+                      >
+                        #{t}
+                      </span>
+                    ))}
+                  </>
+                );
+              })()}
+
               <span className="flex items-center gap-1 text-[11px] font-semibold text-[#00c853] bg-[#00c853]/10 px-2 py-0.5 rounded border border-[#00c853]/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00c853] animate-pulse"></span>
                 AO VIVO
