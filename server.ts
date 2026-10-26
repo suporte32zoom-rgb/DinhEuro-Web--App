@@ -293,6 +293,51 @@ app.get("/api/finnhub/quote", async (req, res) => {
   }
 });
 
+/**
+ * Função para processar os dados do evento recebido sem bloquear a resposta HTTP
+ */
+async function processarEventoEmBackground(data: any) {
+  try {
+    console.log("[Finnhub Webhook] Processando evento recebido:", typeof data === "object" ? JSON.stringify(data) : data);
+    
+    // Tratamento para eventos de trade em tempo real (ex: trades de ações ou cripto)
+    if (data?.type === "trade" && Array.isArray(data?.data)) {
+      for (const trade of data.data) {
+        if (trade?.s && typeof trade?.p === "number") {
+          const updated = quotesService.updateQuotePrice(trade.s, trade.p);
+          if (updated) {
+            console.log(`[Finnhub Webhook] Cotação de ${trade.s} atualizada para US$ ${trade.p}`);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[Finnhub Webhook] Erro ao processar dados do webhook:", error);
+  }
+}
+
+// Endpoint do Webhook Finnhub
+app.post("/api/webhook/finnhub", (req, res) => {
+  const secretHeader = req.headers["x-finnhub-secret"];
+  
+  // O ideal é usar variável de ambiente, mas você pode usar o segredo diretamente se preferir
+  const expectedSecret = process.env.FINNHUB_WEBHOOK_SECRET || "dbfsnl9r01qiahublh4g";
+
+  // 1. Validação de Segurança do Cabeçalho
+  if (!secretHeader || secretHeader !== expectedSecret) {
+    console.warn("[Finnhub Webhook] Tentativa de webhook não autorizada recebida.");
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  // 2. Confirmação imediata do recebimento (Status 200 OK)
+  // Isso deve ser feito ANTES de qualquer lógica pesada para evitar timeouts na Finnhub.
+  res.status(200).json({ received: true });
+
+  // 3. Processamento posterior dos dados em segundo plano
+  const eventData = req.body;
+  processarEventoEmBackground(eventData);
+});
+
 // API: Historical Chart Data for any ticker & period
 app.get("/api/market/chart", async (req, res) => {
   try {

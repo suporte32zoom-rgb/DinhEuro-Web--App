@@ -728,6 +728,37 @@ class QuotesService {
   public async getQuotes(): Promise<Record<string, LiveQuote>> {
     return this.updateAllQuotes(false);
   }
+
+  /**
+   * Directly updates or patches a quote from a real-time webhook event
+   */
+  public updateQuotePrice(symbol: string, newPrice: number): boolean {
+    const sym = symbol.toUpperCase();
+    const foundEntry = Object.entries(ASSET_REGISTRY).find(
+      ([, reg]) => reg.ticker.toUpperCase() === sym || reg.symbol.toUpperCase() === sym
+    );
+    const id = foundEntry ? foundEntry[0] : symbol.toLowerCase();
+
+    if (this.cache.data[id]) {
+      const current = this.cache.data[id];
+      const prevClose = current.open || current.price;
+      const change = newPrice - prevClose;
+      const changePercent = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+      this.cache.data[id] = {
+        ...current,
+        price: Number(newPrice.toFixed(newPrice < 10 ? 4 : 2)),
+        change: Number(change.toFixed(newPrice < 10 ? 4 : 2)),
+        changePercent: Number(changePercent.toFixed(2)),
+        high: Math.max(current.high || newPrice, newPrice),
+        low: Math.min(current.low || newPrice, newPrice),
+        lastUpdated: new Date().toISOString(),
+        source: "finnhub-webhook",
+      };
+      return true;
+    }
+    return false;
+  }
 }
 
 // Export singleton instance
