@@ -7,10 +7,9 @@
 import { LiveQuotePayload } from "./marketDataService";
 import { ALL_ASSETS } from "../data/mockMarketData";
 import { obterCotacaoFinnhub, FinnhubQuoteResult } from "./finnhubService";
-import { obterCotacaoFMP, FMPQuote } from "./fmpService";
 
-export { obterCotacaoFinnhub, obterCotacaoFMP };
-export type { FinnhubQuoteResult, FMPQuote };
+export { obterCotacaoFinnhub };
+export type { FinnhubQuoteResult };
 
 export const DEFAULT_TIMEOUT_MS = 5000;
 export const CACHE_KEY_QUOTES = "dinheuro_live_quotes_cache";
@@ -360,38 +359,6 @@ export async function getResilientMarketQuotes(): Promise<Record<string, LiveQuo
         }
       } catch {
         // Silenciosamente ignora falhas individuais na Finnhub
-      }
-    })
-  );
-
-  // Mescla dados em tempo real da FMP Stable para índices, moedas e commodities
-  const fmpMappings: Record<string, string> = {
-    "sp-500": "SPY",
-    nasdaq: "QQQ",
-    "dow-jones": "DIA",
-    "usd-eur": "EURUSD",
-    "ouro-futuro": "GCUSD",
-  };
-
-  await Promise.all(
-    Object.entries(fmpMappings).map(async ([id, fmpSymbol]) => {
-      try {
-        const fmpQuote = await obterCotacaoFMP(fmpSymbol);
-        if (fmpQuote && fmpQuote.price > 0 && quotes[id]) {
-          quotes[id] = {
-            ...quotes[id],
-            price: fmpQuote.price,
-            change: Number(fmpQuote.change.toFixed(2)),
-            changePercent: Number(fmpQuote.changePercentage.toFixed(2)),
-            open: fmpQuote.open || fmpQuote.price,
-            high: fmpQuote.dayHigh || fmpQuote.price,
-            low: fmpQuote.dayLow || fmpQuote.price,
-            volume: fmpQuote.volume ? `US$ ${(fmpQuote.volume / 1000000).toFixed(1)} Mi` : quotes[id].volume,
-            lastUpdated: new Date().toISOString(),
-          };
-        }
-      } catch {
-        // Silenciosamente ignora falhas pontuais
       }
     })
   );

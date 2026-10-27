@@ -364,7 +364,7 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
                   </div>
 
                   {/* Horizontal Scroll of Assets for this specific Sector */}
-                  <div className="flex items-stretch gap-3.5 overflow-x-auto pb-3 pt-1 px-4 sm:px-5 -mx-4 sm:-mx-5 scrollbar-none snap-x snap-mandatory overscroll-x-contain scroll-touch-smooth">
+                  <div className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
                     {secAssets.map((asset) => renderAssetCard(asset))}
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
           /* VIEW MODE 2: FLAT HORIZONTAL CAROUSEL */
           <div
             ref={scrollRef}
-            className="flex items-stretch gap-3.5 overflow-x-auto pb-3 pt-1 px-4 sm:px-6 lg:px-8 -mx-4 sm:-mx-6 lg:-mx-8 scrollbar-none snap-x snap-mandatory overscroll-x-contain scroll-touch-smooth"
+            className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
           >
             {isLoading && filteredAssets.length === 0
               ? Array.from({ length: 5 }).map((_, idx) => (

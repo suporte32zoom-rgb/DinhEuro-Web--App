@@ -611,7 +611,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         </div>
 
         {/* Period Selector Tabs */}
-        <div className="flex items-center gap-1 bg-[#0e1117] p-1 rounded-xl border border-[#30363d] overflow-x-auto scrollbar-none overscroll-x-contain scroll-touch-smooth max-w-full">
+        <div className="flex items-center gap-1 bg-[#0e1117] p-1 rounded-xl border border-[#30363d] overflow-x-auto scrollbar-none">
           {periods.map((p) => (
             <button
               key={p}
@@ -630,7 +630,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
       </div>
 
       {/* Chart Tools Bar & Comparison Trigger */}
-      <div className="flex items-center justify-between py-3 text-xs text-[#8b949e] flex-wrap gap-2 border-b border-[#21262d]/50 relative overscroll-x-contain scroll-touch-smooth">
+      <div className="flex items-center justify-between py-3 text-xs text-[#8b949e] flex-wrap gap-2 border-b border-[#21262d]/50 relative">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Chart Style: Area / Line / Candle */}
           <div className="flex items-center bg-[#0e1117] rounded-lg p-0.5 border border-[#30363d]">

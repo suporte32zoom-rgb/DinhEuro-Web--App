@@ -31,7 +31,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
   return (
     <nav aria-label="Categorias de Mercado" className="w-full border-b border-[#21262d] bg-[#0e1117]/80 backdrop-blur-xs py-2.5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 overscroll-x-contain scroll-touch-smooth px-1">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
