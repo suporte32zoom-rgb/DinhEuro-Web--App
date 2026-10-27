@@ -83,6 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       className={`sticky top-0 z-40 w-full transition-all duration-200 ${
         isScrolled
           ? "bg-[#0e1117]/95 backdrop-blur-md border-b border-[#30363d] shadow-lg shadow-black/40"
@@ -90,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
       }`}
     >
       {/* Top Ticker Micro-Bar with Real-Time Data */}
-      <div className="w-full bg-[#161b22] border-b border-[#21262d] px-4 py-1 text-xs text-[#8b949e] flex items-center justify-between overflow-x-auto scrollbar-none">
+      <div className="w-full bg-[#161b22] border-b border-[#21262d] px-4 sm:px-6 lg:px-8 py-1 text-xs text-[#8b949e] flex items-center justify-between overflow-x-auto scrollbar-none overscroll-x-contain">
         <div className="flex items-center gap-4 shrink-0">
           <div className="flex items-center gap-1.5 font-medium text-[#e6edf3]">
             <span className="w-2 h-2 rounded-full bg-[#00c853] animate-pulse"></span>

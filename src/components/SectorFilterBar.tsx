@@ -165,7 +165,7 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
         {/* Sectors Pills Carousel */}
         <div
           ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none"
+          className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none overscroll-x-contain scroll-touch-smooth px-1"
         >
           {sectorsList.map((sec) => {
             const isSelected = selectedSector === sec.id;
@@ -226,7 +226,7 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
         </div>
 
         {/* Popular Tags Filter Sub-Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 pt-1 text-[11px] scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 text-[11px] scrollbar-none overscroll-x-contain scroll-touch-smooth px-1">
           <div className="flex items-center gap-1 text-[#8b949e] shrink-0 font-medium mr-1">
             <TagIcon className="w-3 h-3 text-[#58a6ff]" />
             <span>Tags populares:</span>

@@ -435,7 +435,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full flex flex-col">
+      <main className="flex-1 w-full flex flex-col pb-28 sm:pb-20 overflow-x-hidden">
         {selectedAsset ? (
           /* 2. PÁGINA INTERNA (VISÃO DETALHADA DO ATIVO/ÍNDICE) */
           <AssetDetailView
@@ -600,11 +600,11 @@ export default function App() {
         initialAsset={alertTargetAsset}
       />
 
-      {/* Floating Action Button for DinhEuro AI */}
+      {/* Floating Action Button for DinhEuro AI with Safe Area and non-overlap */}
       <button
         id="floating-ai-copilot-btn"
         onClick={() => setCopilotOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-[#1f6feb] via-[#8957e5] to-[#f0883e] text-white font-semibold text-xs sm:text-sm shadow-xl shadow-black/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20 group"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] right-4 sm:right-6 z-40 flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-gradient-to-r from-[#1f6feb] via-[#8957e5] to-[#f0883e] text-white font-semibold text-xs sm:text-sm shadow-2xl shadow-black/60 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20 group backdrop-blur-md"
         title="Abrir IA Especialista DinhEuro"
       >
         <Sparkles className="w-4 h-4 text-amber-300 animate-spin-slow group-hover:rotate-45 transition-transform" />
