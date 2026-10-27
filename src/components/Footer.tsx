@@ -35,7 +35,7 @@ export const Footer: React.FC = () => {
             <strong className="text-[#8b949e]">Aviso Legal:</strong> As cotações e gráficos exibidos no portal DinhEuro.com são fornecidos para fins estritamente informativos e educacionais e não constituem recomendação de compra ou venda de quaisquer ativos, títulos ou contratos futuros. Dados de bolsas podem conter atrasos normativos de até 15 minutos dependendo da praça financeira. Criptoativos e Câmbio com transmissão 24/7.
           </p>
           <p>
-            © {new Date().getFullYear()} DinhEuro.com. Todos os direitos reservados. Interface construída com padrão de alta densidade e modo escuro nativo (#0e1117).
+            © {new Date().getFullYear()} DinhEuro.com. Todos os direitos reservados.
           </p>
         </div>
       </div>
