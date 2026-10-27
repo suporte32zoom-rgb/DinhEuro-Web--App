@@ -20,6 +20,7 @@ import { NavigationTabs } from "./components/NavigationTabs";
 import { SectorFilterBar } from "./components/SectorFilterBar";
 import { DynamicIndicesCarousel } from "./components/DynamicIndicesCarousel";
 import { GlobalEconomyWidget } from "./components/GlobalEconomyWidget";
+import { DEFAULT_UNIFIED_CURRENCIES, economyItemToAsset } from "./services/unifiedCurrencyService";
 import { AIMarketSummaryAccordion } from "./components/AIMarketSummaryAccordion";
 import { MarketMoversGrid } from "./components/MarketMoversGrid";
 import { NewsSection } from "./components/NewsSection";
@@ -317,15 +318,28 @@ export default function App() {
     }
   }, [portfolioPositions]);
 
-  // Handle URL hash changes for deep linking (e.g. #asset/petr4)
+  // Handle URL hash changes for deep linking (e.g. #asset/petr4, #asset/usd-brl, #asset/eur-brl)
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
       if (hash.startsWith("#asset/")) {
-        const tickerOrId = hash.replace("#asset/", "").toLowerCase();
-        const found = liveAssets.find(
-          (a) => a.id.toLowerCase() === tickerOrId || a.ticker.toLowerCase() === tickerOrId
+        const rawKey = hash.replace("#asset/", "").toLowerCase();
+        let found = liveAssets.find(
+          (a) => a.id.toLowerCase() === rawKey || a.ticker.toLowerCase() === rawKey
         );
+        // If not found in live catalog, check unified currency service
+        if (!found) {
+          const cleanKey = rawKey.replace(/[-_/]/g, "").toUpperCase();
+          const matchQuote = Object.values(DEFAULT_UNIFIED_CURRENCIES).find(
+            (q) =>
+              `${q.code}${q.codein}`.toUpperCase() === cleanKey ||
+              `${q.code.toLowerCase()}-${q.codein.toLowerCase()}` === rawKey ||
+              q.code.toLowerCase() === rawKey
+          );
+          if (matchQuote) {
+            found = economyItemToAsset(matchQuote);
+          }
+        }
         if (found) {
           setSelectedAsset(found);
           window.scrollTo({ top: 0, behavior: "smooth" });
@@ -364,6 +378,24 @@ export default function App() {
     window.location.hash = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleViewAllStocks = useCallback(() => {
+    setActiveTab("América Latina");
+    setSelectedSector("all");
+    setActiveTag("");
+    if (selectedAsset) {
+      setSelectedAsset(null);
+      window.location.hash = "";
+    }
+    setTimeout(() => {
+      const el = document.getElementById("market-assets-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.scrollTo({ top: 380, behavior: "smooth" });
+      }
+    }, 50);
+  }, [selectedAsset]);
 
   const handleToggleWatchlist = (asset: Asset) => {
     setWatchlistIds((prev) =>
@@ -492,7 +524,10 @@ export default function App() {
 
             {/* Global Economy & AwesomeAPI Live Indicators */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-2">
-              <GlobalEconomyWidget />
+              <GlobalEconomyWidget
+                onSelectAsset={handleSelectAsset}
+                liveAssets={liveAssets}
+              />
             </div>
 
             {/* AI Market Summary Accordion */}
@@ -505,6 +540,7 @@ export default function App() {
             <MarketMoversGrid
               onSelectTicker={handleSelectTicker}
               liveMovers={liveMovers}
+              onViewAllStocks={handleViewAllStocks}
             />
 
             {/* Portal News Section */}

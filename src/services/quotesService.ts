@@ -477,6 +477,58 @@ class QuotesService {
   }
 
   /**
+   * 6. Fetch from Financial Modeling Prep (FMP Stable API)
+   */
+  public async fetchFMPQuote(symbol: string): Promise<{
+    price: number;
+    prevClose: number;
+    open: number;
+    high: number;
+    low: number;
+    change: number;
+    changePercent: number;
+    volume?: number;
+    yearHigh?: number;
+    yearLow?: number;
+  } | null> {
+    try {
+      const apiKey = process.env.FMP_API_KEY || "GJaGtHdggEtpz6erXjYrSNchdFk8FJwm";
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const url = `https://financialmodelingprep.com/stable/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return null;
+
+      const q = data[0];
+      if (!q || typeof q.price !== "number" || q.price <= 0) return null;
+
+      return {
+        price: q.price,
+        prevClose: q.previousClose || (q.change ? q.price - q.change : q.price),
+        open: q.open || q.price,
+        high: q.dayHigh || q.price,
+        low: q.dayLow || q.price,
+        change: q.change || 0,
+        changePercent: q.changePercentage || 0,
+        volume: q.volume,
+        yearHigh: q.yearHigh,
+        yearLow: q.yearLow,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Master Update: Refreshes all 57 quotes across all categories
    */
   public async updateAllQuotes(forceRefresh = false): Promise<Record<string, LiveQuote>> {
@@ -537,10 +589,39 @@ class QuotesService {
               let volumeStr = "R$ 450 Mi";
               let dataSource = "default";
 
-              // Check Finnhub for US Equities & Global Tickers
+              // Check Finnhub for US Equities, Global Tickers & Proxies
               let finnhubData: { price: number; prevClose: number; open: number; high: number; low: number; change: number; changePercent: number } | null = null;
+              let fmpData: { price: number; prevClose: number; open: number; high: number; low: number; change: number; changePercent: number; volume?: number; yearHigh?: number; yearLow?: number } | null = null;
+
               if (reg.category === "EUA" && !reg.symbol.startsWith("^")) {
                 finnhubData = await this.fetchFinnhubQuote(reg.symbol);
+                if (!finnhubData || finnhubData.price <= 0) {
+                  fmpData = await this.fetchFMPQuote(reg.symbol);
+                }
+              } else if (id === "sp-500" || id === "sp-500-futuros") {
+                finnhubData = await this.fetchFinnhubQuote("SPY");
+                if (!finnhubData || finnhubData.price <= 0) {
+                  fmpData = await this.fetchFMPQuote("SPY");
+                }
+              } else if (id === "nasdaq") {
+                finnhubData = await this.fetchFinnhubQuote("QQQ");
+                if (!finnhubData || finnhubData.price <= 0) {
+                  fmpData = await this.fetchFMPQuote("QQQ");
+                }
+              } else if (id === "dow-jones") {
+                finnhubData = await this.fetchFinnhubQuote("DIA");
+                if (!finnhubData || finnhubData.price <= 0) {
+                  fmpData = await this.fetchFMPQuote("DIA");
+                }
+              } else if (id === "usd-eur") {
+                fmpData = await this.fetchFMPQuote("EURUSD");
+              } else if (id === "ouro-futuro") {
+                fmpData = await this.fetchFMPQuote("GCUSD");
+              } else if (reg.type === "crypto") {
+                const cryptoFmpSymbol = id === "bitcoin" ? "BTCUSD" : id === "ether" ? "ETHUSD" : null;
+                if (cryptoFmpSymbol) {
+                  fmpData = await this.fetchFMPQuote(cryptoFmpSymbol);
+                }
               }
 
               if (finnhubData && finnhubData.price > 0) {
@@ -554,8 +635,21 @@ class QuotesService {
                 low52 = price * 0.75;
                 volumeStr = `US$ ${(price * 12.5).toFixed(1)} Mi`;
                 dataSource = "finnhub";
+              } else if (fmpData && fmpData.price > 0) {
+                price = fmpData.price;
+                prevClose = fmpData.prevClose || fmpData.price;
+                open = fmpData.open || prevClose;
+                high = fmpData.high || Math.max(price, prevClose);
+                low = fmpData.low || Math.min(price, prevClose);
+                sparkline = [prevClose, (prevClose + price) / 2, price];
+                high52 = fmpData.yearHigh || price * 1.25;
+                low52 = fmpData.yearLow || price * 0.75;
+                if (fmpData.volume) {
+                  volumeStr = `US$ ${(fmpData.volume / 1000000).toFixed(1)} Mi`;
+                }
+                dataSource = "fmp";
               }
-              // Check AwesomeAPI first for FX & Crypto
+              // Check AwesomeAPI next for FX & Crypto
               else if (awesomeData && awesomeData[id]) {
                 const aData = awesomeData[id];
                 price = aData.price;

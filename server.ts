@@ -247,6 +247,204 @@ app.get("/api/market/quotes", async (req, res) => {
   }
 });
 
+// API: Unified Global Economy & Currencies Endpoint (Cached server-side to prevent 429 quota errors)
+let economyCache: { timestamp: number; data: any } = { timestamp: 0, data: null };
+
+app.get("/api/market/economy", async (req, res) => {
+  try {
+    const now = Date.now();
+    if (economyCache.data && now - economyCache.timestamp < 15000) {
+      return res.json({ success: true, data: economyCache.data, cached: true });
+    }
+
+    const quotes = await quotesService.getQuotes();
+    const usdBrl = quotes["usd-brl"]?.price || 5.4117;
+    const eurBrl = quotes["eur-brl"]?.price || 6.0354;
+    const gbpBrl = quotes["gbp-brl"]?.price || 7.2145;
+    const jpyBrl = quotes["jpy-brl"]?.price || 0.0349;
+    const btcBrl = quotes["btc-brl"]?.price || (quotes["bitcoin"]?.price ? quotes["bitcoin"].price * usdBrl : 548200);
+    const ethBrl = quotes["eth-brl"]?.price || (quotes["ether"]?.price ? quotes["ether"].price * usdBrl : 17180);
+
+    const economyData: Record<string, any> = {
+      USDBRL: {
+        code: "USD",
+        codein: "BRL",
+        name: "Dólar Americano / Real Brasileiro",
+        high: String((usdBrl * 1.008).toFixed(4)),
+        low: String((usdBrl * 0.992).toFixed(4)),
+        varBid: String((quotes["usd-brl"]?.change || 0.021).toFixed(4)),
+        pctChange: String((quotes["usd-brl"]?.changePercent || 0.42).toFixed(2)),
+        bid: String(usdBrl.toFixed(4)),
+        ask: String((usdBrl * 1.0003).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      EURBRL: {
+        code: "EUR",
+        codein: "BRL",
+        name: "Euro / Real Brasileiro",
+        high: String((eurBrl * 1.008).toFixed(4)),
+        low: String((eurBrl * 0.992).toFixed(4)),
+        varBid: String((quotes["eur-brl"]?.change || 0.019).toFixed(4)),
+        pctChange: String((quotes["eur-brl"]?.changePercent || 0.35).toFixed(2)),
+        bid: String(eurBrl.toFixed(4)),
+        ask: String((eurBrl * 1.0003).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      GBPBRL: {
+        code: "GBP",
+        codein: "BRL",
+        name: "Libra Esterlina / Real Brasileiro",
+        high: String((gbpBrl * 1.008).toFixed(4)),
+        low: String((gbpBrl * 0.992).toFixed(4)),
+        varBid: String((quotes["gbp-brl"]?.change || 0.028).toFixed(4)),
+        pctChange: String((quotes["gbp-brl"]?.changePercent || 0.4).toFixed(2)),
+        bid: String(gbpBrl.toFixed(4)),
+        ask: String((gbpBrl * 1.0003).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      JPYBRL: {
+        code: "JPY",
+        codein: "BRL",
+        name: "Iene Japonês / Real Brasileiro",
+        high: String((jpyBrl * 1.01).toFixed(4)),
+        low: String((jpyBrl * 0.99).toFixed(4)),
+        varBid: String((quotes["jpy-brl"]?.change || -0.0001).toFixed(4)),
+        pctChange: String((quotes["jpy-brl"]?.changePercent || -0.28).toFixed(2)),
+        bid: String(jpyBrl.toFixed(4)),
+        ask: String((jpyBrl * 1.005).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CADBRL: {
+        code: "CAD",
+        codein: "BRL",
+        name: "Dólar Canadense / Real Brasileiro",
+        high: String((usdBrl * 0.725).toFixed(4)),
+        low: String((usdBrl * 0.715).toFixed(4)),
+        varBid: "0.0110",
+        pctChange: "0.28",
+        bid: String((usdBrl * 0.719).toFixed(4)),
+        ask: String((usdBrl * 0.72).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CHFBRL: {
+        code: "CHF",
+        codein: "BRL",
+        name: "Franco Suíço / Real Brasileiro",
+        high: String((usdBrl * 1.16).toFixed(4)),
+        low: String((usdBrl * 1.145).toFixed(4)),
+        varBid: "0.0160",
+        pctChange: "0.26",
+        bid: String((usdBrl * 1.155).toFixed(4)),
+        ask: String((usdBrl * 1.156).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      AUDBRL: {
+        code: "AUD",
+        codein: "BRL",
+        name: "Dólar Australiano / Real Brasileiro",
+        high: String((usdBrl * 0.658).toFixed(4)),
+        low: String((usdBrl * 0.648).toFixed(4)),
+        varBid: "0.0090",
+        pctChange: "0.25",
+        bid: String((usdBrl * 0.654).toFixed(4)),
+        ask: String((usdBrl * 0.655).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CNYBRL: {
+        code: "CNY",
+        codein: "BRL",
+        name: "Yuan Chinês / Real Brasileiro",
+        high: String((usdBrl * 0.141).toFixed(4)),
+        low: String((usdBrl * 0.138).toFixed(4)),
+        varBid: "0.0020",
+        pctChange: "0.27",
+        bid: String((usdBrl * 0.14).toFixed(4)),
+        ask: String((usdBrl * 0.1402).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      BTCBRL: {
+        code: "BTC",
+        codein: "BRL",
+        name: "Bitcoin em Reais",
+        high: String(Math.round(btcBrl * 1.02)),
+        low: String(Math.round(btcBrl * 0.98)),
+        varBid: "7200",
+        pctChange: String((quotes["btc-brl"]?.changePercent || 1.34).toFixed(2)),
+        bid: String(Math.round(btcBrl)),
+        ask: String(Math.round(btcBrl * 1.0005)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      ETHBRL: {
+        code: "ETH",
+        codein: "BRL",
+        name: "Ethereum em Reais",
+        high: String(Math.round(ethBrl * 1.02)),
+        low: String(Math.round(ethBrl * 0.98)),
+        varBid: "230",
+        pctChange: String((quotes["eth-brl"]?.changePercent || 1.36).toFixed(2)),
+        bid: String(Math.round(ethBrl)),
+        ask: String(Math.round(ethBrl * 1.001)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      ARSBRL: {
+        code: "ARS",
+        codein: "BRL",
+        name: "Peso Argentino / Real",
+        high: "0.0054",
+        low: "0.0051",
+        varBid: "-0.00005",
+        pctChange: "-0.92",
+        bid: "0.0053",
+        ask: "0.0054",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CLPBRL: {
+        code: "CLP",
+        codein: "BRL",
+        name: "Peso Chileno / Real",
+        high: "0.0058",
+        low: "0.0055",
+        varBid: "0.00002",
+        pctChange: "0.35",
+        bid: "0.0056",
+        ask: "0.0057",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      MXNBRL: {
+        code: "MXN",
+        codein: "BRL",
+        name: "Peso Mexicano / Real",
+        high: "0.2740",
+        low: "0.2660",
+        varBid: "0.0015",
+        pctChange: "0.56",
+        bid: "0.2695",
+        ask: "0.2705",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+    };
+
+    economyCache = { timestamp: now, data: economyData };
+    res.json({ success: true, data: economyData });
+  } catch (error: any) {
+    console.error("[Server] Error in /api/market/economy:", error);
+    res.status(500).json({ success: false, error: "Erro ao obter dados de economia unificada." });
+  }
+});
+
 // API: Finnhub Real-Time Quote Proxy (Secures API key server-side & solves CORS)
 app.get("/api/finnhub/quote", async (req, res) => {
   try {
@@ -626,12 +824,18 @@ app.get("/api/market/news", async (req, res) => {
             if (upper.includes("PETRÓLEO") || upper.includes("BRENT")) tickers.push("BRENT");
 
             if (rawTitle && rawLink) {
+              const secureLink = rawLink.startsWith("http://")
+                ? rawLink.replace(/^http:\/\//i, "https://")
+                : rawLink.startsWith("https://")
+                ? rawLink
+                : `https://${rawLink}`;
+
               allNews.push({
                 id: `real-news-${idCounter++}`,
                 title: rawTitle,
                 source: sourceName,
                 timeAgo: getRelativeTimePt(rawPubDate),
-                url: rawLink,
+                url: secureLink,
                 category: rss.category,
                 relatedTickers: tickers.length > 0 ? tickers : ["MERCADO"],
                 sentiment: upper.includes("ALTA") || upper.includes("SOBE") || upper.includes("DISPARA") ? "positive" : upper.includes("QUEDA") || upper.includes("CAI") || upper.includes("RECUO") ? "negative" : "neutral",

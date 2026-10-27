@@ -238,7 +238,7 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
   };
 
   return (
-    <div className="w-full py-4 relative group">
+    <div id="market-assets-section" className="w-full py-4 relative group">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         {/* Section Header with Category & Sector Context */}
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -364,7 +364,10 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
                   </div>
 
                   {/* Horizontal Scroll of Assets for this specific Sector */}
-                  <div className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+                  <div
+                    className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory nav-scroll-container touch-scroll-x flex-nowrap"
+                    style={{ WebkitOverflowScrolling: "touch" }}
+                  >
                     {secAssets.map((asset) => renderAssetCard(asset))}
                   </div>
                 </div>
@@ -375,7 +378,8 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
           /* VIEW MODE 2: FLAT HORIZONTAL CAROUSEL */
           <div
             ref={scrollRef}
-            className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
+            className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory nav-scroll-container touch-scroll-x flex-nowrap"
+            style={{ WebkitOverflowScrolling: "touch" }}
           >
             {isLoading && filteredAssets.length === 0
               ? Array.from({ length: 5 }).map((_, idx) => (

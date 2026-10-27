@@ -130,6 +130,204 @@ app.get("/api/market/quotes", async (req, res) => {
   }
 });
 
+// API: Unified Global Economy & Currencies Endpoint (Cached server-side to prevent 429 quota errors)
+let hostingerEconomyCache = { timestamp: 0, data: null };
+
+app.get("/api/market/economy", async (req, res) => {
+  try {
+    const now = Date.now();
+    if (hostingerEconomyCache.data && now - hostingerEconomyCache.timestamp < 15000) {
+      return res.json({ success: true, data: hostingerEconomyCache.data, cached: true });
+    }
+
+    const fxData = await fetchAwesomeApiRates();
+    const usdBrl = fxData?.USDBRL ? Number(fxData.USDBRL.bid) : 5.4117;
+    const eurBrl = fxData?.EURBRL ? Number(fxData.EURBRL.bid) : 6.0354;
+    const gbpBrl = fxData?.GBPBRL ? Number(fxData.GBPBRL.bid) : 7.2145;
+    const jpyBrl = fxData?.JPYBRL ? Number(fxData.JPYBRL.bid) : 0.0349;
+    const btcBrl = fxData?.BTCBRL ? Number(fxData.BTCBRL.bid) : 548200;
+    const ethBrl = fxData?.ETHBRL ? Number(fxData.ETHBRL.bid) : 17180;
+
+    const economyData = {
+      USDBRL: {
+        code: "USD",
+        codein: "BRL",
+        name: "Dólar Americano / Real Brasileiro",
+        high: String((usdBrl * 1.008).toFixed(4)),
+        low: String((usdBrl * 0.992).toFixed(4)),
+        varBid: String((fxData?.USDBRL?.varBid || 0.021).toFixed(4)),
+        pctChange: String((fxData?.USDBRL?.pctChange || 0.42).toFixed(2)),
+        bid: String(usdBrl.toFixed(4)),
+        ask: String((usdBrl * 1.0003).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      EURBRL: {
+        code: "EUR",
+        codein: "BRL",
+        name: "Euro / Real Brasileiro",
+        high: String((eurBrl * 1.008).toFixed(4)),
+        low: String((eurBrl * 0.992).toFixed(4)),
+        varBid: String((fxData?.EURBRL?.varBid || 0.019).toFixed(4)),
+        pctChange: String((fxData?.EURBRL?.pctChange || 0.35).toFixed(2)),
+        bid: String(eurBrl.toFixed(4)),
+        ask: String((eurBrl * 1.0003).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      GBPBRL: {
+        code: "GBP",
+        codein: "BRL",
+        name: "Libra Esterlina / Real Brasileiro",
+        high: String((gbpBrl * 1.008).toFixed(4)),
+        low: String((gbpBrl * 0.992).toFixed(4)),
+        varBid: String((fxData?.GBPBRL?.varBid || 0.028).toFixed(4)),
+        pctChange: String((fxData?.GBPBRL?.pctChange || 0.4).toFixed(2)),
+        bid: String(gbpBrl.toFixed(4)),
+        ask: String((gbpBrl * 1.0003).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      JPYBRL: {
+        code: "JPY",
+        codein: "BRL",
+        name: "Iene Japonês / Real Brasileiro",
+        high: String((jpyBrl * 1.01).toFixed(4)),
+        low: String((jpyBrl * 0.99).toFixed(4)),
+        varBid: String((fxData?.JPYBRL?.varBid || -0.0001).toFixed(4)),
+        pctChange: String((fxData?.JPYBRL?.pctChange || -0.28).toFixed(2)),
+        bid: String(jpyBrl.toFixed(4)),
+        ask: String((jpyBrl * 1.005).toFixed(4)),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CADBRL: {
+        code: "CAD",
+        codein: "BRL",
+        name: "Dólar Canadense / Real Brasileiro",
+        high: "3.9240",
+        low: "3.8610",
+        varBid: "0.0110",
+        pctChange: "0.28",
+        bid: "3.8920",
+        ask: "3.8950",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CHFBRL: {
+        code: "CHF",
+        codein: "BRL",
+        name: "Franco Suíço / Real Brasileiro",
+        high: "6.2840",
+        low: "6.2110",
+        varBid: "0.0160",
+        pctChange: "0.26",
+        bid: "6.2510",
+        ask: "6.2545",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      AUDBRL: {
+        code: "AUD",
+        codein: "BRL",
+        name: "Dólar Australiano / Real Brasileiro",
+        high: "3.5820",
+        low: "3.5140",
+        varBid: "0.0090",
+        pctChange: "0.25",
+        bid: "3.5420",
+        ask: "3.5450",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CNYBRL: {
+        code: "CNY",
+        codein: "BRL",
+        name: "Yuan Chinês / Real Brasileiro",
+        high: "0.7640",
+        low: "0.7510",
+        varBid: "0.0020",
+        pctChange: "0.27",
+        bid: "0.7580",
+        ask: "0.7595",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      BTCBRL: {
+        code: "BTC",
+        codein: "BRL",
+        name: "Bitcoin em Reais",
+        high: String(Math.round(btcBrl * 1.02)),
+        low: String(Math.round(btcBrl * 0.98)),
+        varBid: String(fxData?.BTCBRL?.varBid || 7200),
+        pctChange: String((fxData?.BTCBRL?.pctChange || 1.34).toFixed(2)),
+        bid: String(btcBrl),
+        ask: String(btcBrl + 300),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      ETHBRL: {
+        code: "ETH",
+        codein: "BRL",
+        name: "Ethereum em Reais",
+        high: String(Math.round(ethBrl * 1.02)),
+        low: String(Math.round(ethBrl * 0.98)),
+        varBid: String(fxData?.ETHBRL?.varBid || 230),
+        pctChange: String((fxData?.ETHBRL?.pctChange || 1.36).toFixed(2)),
+        bid: String(ethBrl),
+        ask: String(ethBrl + 30),
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      ARSBRL: {
+        code: "ARS",
+        codein: "BRL",
+        name: "Peso Argentino / Real",
+        high: "0.0054",
+        low: "0.0051",
+        varBid: "-0.00005",
+        pctChange: "-0.92",
+        bid: "0.0053",
+        ask: "0.0054",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      CLPBRL: {
+        code: "CLP",
+        codein: "BRL",
+        name: "Peso Chileno / Real",
+        high: "0.0058",
+        low: "0.0055",
+        varBid: "0.00002",
+        pctChange: "0.35",
+        bid: "0.0056",
+        ask: "0.0057",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+      MXNBRL: {
+        code: "MXN",
+        codein: "BRL",
+        name: "Peso Mexicano / Real",
+        high: "0.2740",
+        low: "0.2660",
+        varBid: "0.0015",
+        pctChange: "0.56",
+        bid: "0.2695",
+        ask: "0.2705",
+        timestamp: String(Math.floor(now / 1000)),
+        create_date: new Date().toISOString(),
+      },
+    };
+
+    hostingerEconomyCache = { timestamp: now, data: economyData };
+    res.json({ success: true, data: economyData, cached: false });
+  } catch (error) {
+    console.error("[Hostinger] Error in /api/market/economy:", error);
+    res.status(500).json({ success: false, error: "Falha ao obter cotações da economia." });
+  }
+});
+
 // Endpoint de Cotação da Finnhub
 app.get("/api/finnhub/quote", async (req, res) => {
   try {

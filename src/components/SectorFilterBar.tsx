@@ -165,7 +165,8 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
         {/* Sectors Pills Carousel */}
         <div
           ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none"
+          className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none nav-scroll-container flex-nowrap"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           {sectorsList.map((sec) => {
             const isSelected = selectedSector === sec.id;
@@ -175,13 +176,14 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
 
             return (
               <button
+                type="button"
                 key={sec.id}
                 id={`sector-pill-${sec.id.toLowerCase()}`}
                 onClick={() => {
                   onSelectSector(sec.id);
                   if (activeTag) onSelectTag("");
                 }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer border ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer border shrink-0 ${
                   isSelected
                     ? "bg-[#21262d] text-white border-[#58a6ff] shadow-sm shadow-[#58a6ff]/20"
                     : "bg-[#0e1117]/80 text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]/60 border-[#30363d]"
@@ -200,7 +202,7 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
 
                 {/* Badge with count */}
                 <span
-                  className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
+                  className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold shrink-0 ${
                     isSelected
                       ? "bg-[#58a6ff]/20 text-[#58a6ff]"
                       : "bg-[#21262d] text-[#8b949e]"
@@ -212,7 +214,7 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
                 {/* Average performance tag */}
                 {count > 0 && sec.id !== "all" && (
                   <span
-                    className={`text-[10px] font-mono font-semibold ${
+                    className={`text-[10px] font-mono font-semibold shrink-0 ${
                       isAvgPos ? "text-[#00c853]" : "text-[#ff5252]"
                     }`}
                   >
@@ -226,7 +228,10 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
         </div>
 
         {/* Popular Tags Filter Sub-Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 pt-1 text-[11px] scrollbar-none">
+        <div
+          className="flex items-center gap-1.5 overflow-x-auto pb-0.5 pt-1 text-[11px] scrollbar-none nav-scroll-container flex-nowrap"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           <div className="flex items-center gap-1 text-[#8b949e] shrink-0 font-medium mr-1">
             <TagIcon className="w-3 h-3 text-[#58a6ff]" />
             <span>Tags populares:</span>
@@ -234,6 +239,7 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
 
           {activeTag && (
             <button
+              type="button"
               onClick={() => onSelectTag("")}
               className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#ff5252]/15 text-[#ff5252] border border-[#ff5252]/30 hover:bg-[#ff5252]/25 transition-colors cursor-pointer shrink-0 font-semibold"
             >
@@ -246,6 +252,7 @@ export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
             const isTagActive = activeTag.toLowerCase() === t.toLowerCase();
             return (
               <button
+                type="button"
                 key={t}
                 onClick={() => onSelectTag(isTagActive ? "" : t)}
                 className={`px-2 py-0.5 rounded-md whitespace-nowrap transition-colors cursor-pointer shrink-0 font-mono text-[11px] border ${

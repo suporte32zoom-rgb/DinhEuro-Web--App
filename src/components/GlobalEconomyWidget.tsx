@@ -1,171 +1,33 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  fetchEconomyData,
-  AwesomeEconomyQuote,
-  AwesomeEconomyResponse,
-} from "../services/awesomeApi";
-import {
   Globe,
   TrendingUp,
   TrendingDown,
   RefreshCw,
   Search,
-  ArrowUpDown,
-  DollarSign,
-  Activity,
-  Layers,
-  Sparkles,
+  ExternalLink,
+  ChevronRight,
 } from "lucide-react";
+import {
+  fetchAllUnifiedCurrencies,
+  subscribeToUnifiedCurrencies,
+  economyItemToAsset,
+  DEFAULT_UNIFIED_CURRENCIES,
+} from "../services/unifiedCurrencyService";
+import { AwesomeEconomyQuote, AwesomeEconomyResponse } from "../services/awesomeApi";
+import { Asset } from "../types/finance";
 
-const DEFAULT_ECONOMY_DATA: AwesomeEconomyResponse = {
-  USDBRL: {
-    code: "USD",
-    codein: "BRL",
-    name: "Dólar Comercial",
-    high: "5.2150",
-    low: "5.1620",
-    varBid: "0.0125",
-    pctChange: "0.24",
-    bid: "5.1866",
-    ask: "5.1878",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  EURBRL: {
-    code: "EUR",
-    codein: "BRL",
-    name: "Euro Comercial",
-    high: "5.9420",
-    low: "5.8810",
-    varBid: "0.0180",
-    pctChange: "0.31",
-    bid: "5.9140",
-    ask: "5.9160",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  GBPBRL: {
-    code: "GBP",
-    codein: "BRL",
-    name: "Libra Esterlina",
-    high: "6.9850",
-    low: "6.9120",
-    varBid: "0.0210",
-    pctChange: "0.30",
-    bid: "6.9530",
-    ask: "6.9560",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  JPYBRL: {
-    code: "JPY",
-    codein: "BRL",
-    name: "Iene Japonês",
-    high: "0.0352",
-    low: "0.0341",
-    varBid: "-0.0001",
-    pctChange: "-0.28",
-    bid: "0.0345",
-    ask: "0.0346",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  CADBRL: {
-    code: "CAD",
-    codein: "BRL",
-    name: "Dólar Canadense",
-    high: "3.8420",
-    low: "3.7910",
-    varBid: "0.0085",
-    pctChange: "0.22",
-    bid: "3.8120",
-    ask: "3.8140",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  CHFBRL: {
-    code: "CHF",
-    codein: "BRL",
-    name: "Franco Suíço",
-    high: "6.1820",
-    low: "6.1150",
-    varBid: "0.0140",
-    pctChange: "0.23",
-    bid: "6.1420",
-    ask: "6.1450",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  BTCBRL: {
-    code: "BTC",
-    codein: "BRL",
-    name: "Bitcoin em Reais",
-    high: "548000",
-    low: "536500",
-    varBid: "6800",
-    pctChange: "1.28",
-    bid: "542300",
-    ask: "542500",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  ETHBRL: {
-    code: "ETH",
-    codein: "BRL",
-    name: "Ethereum em Reais",
-    high: "17200",
-    low: "16750",
-    varBid: "210",
-    pctChange: "1.25",
-    bid: "17050",
-    ask: "17080",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  ARSBRL: {
-    code: "ARS",
-    codein: "BRL",
-    name: "Peso Argentino",
-    high: "0.0053",
-    low: "0.0051",
-    varBid: "-0.00005",
-    pctChange: "-0.95",
-    bid: "0.0052",
-    ask: "0.0053",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  CLPBRL: {
-    code: "CLP",
-    codein: "BRL",
-    name: "Peso Chileno",
-    high: "0.0056",
-    low: "0.0054",
-    varBid: "0.00002",
-    pctChange: "0.36",
-    bid: "0.0055",
-    ask: "0.0056",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-  MXNBRL: {
-    code: "MXN",
-    codein: "BRL",
-    name: "Peso Mexicano",
-    high: "0.2650",
-    low: "0.2580",
-    varBid: "0.0012",
-    pctChange: "0.46",
-    bid: "0.2610",
-    ask: "0.2615",
-    timestamp: String(Math.floor(Date.now() / 1000)),
-    create_date: new Date().toISOString(),
-  },
-};
+interface GlobalEconomyWidgetProps {
+  onSelectAsset?: (asset: Asset) => void;
+  liveAssets?: Asset[];
+}
 
-export const GlobalEconomyWidget: React.FC = () => {
-  const [data, setData] = useState<AwesomeEconomyResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+export const GlobalEconomyWidget: React.FC<GlobalEconomyWidgetProps> = ({
+  onSelectAsset,
+  liveAssets = [],
+}) => {
+  const [data, setData] = useState<AwesomeEconomyResponse>(DEFAULT_UNIFIED_CURRENCIES);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "major" | "crypto" | "latam"
@@ -177,9 +39,8 @@ export const GlobalEconomyWidget: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // First attempt key pairs for instant response, or 'all'
-      const result = await fetchEconomyData("all");
-      if (result && Object.keys(result).length > 0 && !result.status) {
+      const result = await fetchAllUnifiedCurrencies();
+      if (result && Object.keys(result).length > 0) {
         setData(result);
         setLastRefreshed(
           new Date().toLocaleTimeString("pt-BR", {
@@ -188,49 +49,36 @@ export const GlobalEconomyWidget: React.FC = () => {
             second: "2-digit",
           })
         );
-      } else {
-        // Fallback to essential basket
-        const fallback = await fetchEconomyData(
-          "USD-BRL,EUR-BRL,BTC-BRL,GBP-BRL,JPY-BRL,CAD-BRL,CHF-BRL,AUD-BRL,CNY-BRL,ETH-BRL,ARS-BRL"
-        );
-        if (fallback && Object.keys(fallback).length > 0 && !(fallback as any).status) {
-          setData(fallback);
-          setLastRefreshed(
-            new Date().toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          );
-        } else {
-          // Graceful fallback without showing a blank or broken box
-          setData(DEFAULT_ECONOMY_DATA);
-          setLastRefreshed(
-            new Date().toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          );
-        }
       }
     } catch (err: any) {
-      console.warn("AwesomeAPI fallback ativo:", err);
-      setData(DEFAULT_ECONOMY_DATA);
-      setLastRefreshed(
-        new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
+      console.warn("[GlobalEconomyWidget] Erro ao sincronizar cotações:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Carrega dados iniciais
     loadData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
+
+    // Inscreve no barramento unificado de moedas
+    const unsubscribe = subscribeToUnifiedCurrencies((quotes) => {
+      setData(quotes);
+      setLastRefreshed(
+        new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    });
+
+    // Atualização periódica a cada 20s
+    const interval = setInterval(loadData, 20000);
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   const itemsList = useMemo(() => {
@@ -246,7 +94,7 @@ export const GlobalEconomyWidget: React.FC = () => {
     }));
 
     return entries.filter((item) => {
-      // Search filter
+      // Filtro de pesquisa
       const matchesSearch =
         searchQuery === "" ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -255,11 +103,9 @@ export const GlobalEconomyWidget: React.FC = () => {
 
       if (!matchesSearch) return false;
 
-      // Category filters
+      // Filtros por categoria
       if (selectedFilter === "major") {
-        return ["USD", "EUR", "GBP", "JPY", "CAD", "CHF", "AUD"].includes(
-          item.code
-        );
+        return ["USD", "EUR", "GBP", "JPY", "CAD", "CHF", "AUD"].includes(item.code);
       }
       if (selectedFilter === "crypto") {
         return ["BTC", "ETH", "LTC", "XRP", "DOGE", "SOL"].includes(item.code);
@@ -270,6 +116,25 @@ export const GlobalEconomyWidget: React.FC = () => {
       return true;
     });
   }, [data, selectedFilter, searchQuery]);
+
+  const handleCardClick = (item: AwesomeEconomyQuote) => {
+    if (!onSelectAsset) return;
+    const cleanCode = item.code.toLowerCase();
+    const cleanCodein = item.codein.toLowerCase();
+    const targetId = `${cleanCode}-${cleanCodein}`;
+
+    // Procura ativo correspondente no catálogo liveAssets
+    const existingAsset = liveAssets.find(
+      (a) =>
+        a.id.toLowerCase() === targetId ||
+        a.id.toLowerCase().replace(/[-_]/g, "") === `${cleanCode}${cleanCodein}` ||
+        a.ticker.toLowerCase() === `${cleanCode}/${cleanCodein}` ||
+        (a.category === "Criptomoedas" && a.ticker.toLowerCase() === cleanCode)
+    );
+
+    const asset = economyItemToAsset(item, existingAsset);
+    onSelectAsset(asset);
+  };
 
   return (
     <div className="w-full bg-[#161b22] border border-[#30363d] rounded-2xl p-4 sm:p-6 shadow-xl mb-6">
@@ -286,11 +151,11 @@ export const GlobalEconomyWidget: React.FC = () => {
               </h3>
               <span className="px-2 py-0.5 rounded-full bg-[#00c853]/15 text-[#00c853] text-[10px] font-mono font-bold border border-[#00c853]/30 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00c853] animate-pulse"></span>
-                AwesomeAPI 100% Pública
+                Sincronizado Oficial
               </span>
             </div>
             <p className="text-xs text-[#8b949e] mt-0.5">
-              Moedas globais, criptos, valor de compra/venda, máxima, mínima e tendências de mercado
+              Moedas globais, criptos, valores de compra/venda e detalhes interativos em tempo real
             </p>
           </div>
         </div>
@@ -303,9 +168,10 @@ export const GlobalEconomyWidget: React.FC = () => {
             </span>
           )}
           <button
+            type="button"
             onClick={loadData}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-[#58a6ff] hover:text-white border border-[#30363d] text-xs font-medium transition-all cursor-pointer shadow-xs disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-[#58a6ff] hover:text-white border border-[#30363d] text-xs font-medium transition-all cursor-pointer shadow-xs disabled:opacity-50 shrink-0"
             title="Atualizar dados da economia agora"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -316,7 +182,7 @@ export const GlobalEconomyWidget: React.FC = () => {
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 py-3 border-b border-[#21262d]/60">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto nav-scroll-container touch-scroll-x pb-1 sm:pb-0 flex-nowrap">
           {[
             { id: "major", label: "Moedas Principais" },
             { id: "crypto", label: "Criptomoedas" },
@@ -324,9 +190,10 @@ export const GlobalEconomyWidget: React.FC = () => {
             { id: "all", label: "Todas as Moedas" },
           ].map((tab) => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setSelectedFilter(tab.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedFilter === tab.id
                   ? "bg-[#58a6ff]/20 text-[#58a6ff] border border-[#58a6ff]/40 shadow-xs"
                   : "bg-[#0e1117] text-[#8b949e] hover:text-[#e6edf3] border border-[#30363d]"
@@ -367,8 +234,9 @@ export const GlobalEconomyWidget: React.FC = () => {
         <div className="py-8 text-center text-xs text-[#ff5252] space-y-2">
           <p>{error}</p>
           <button
+            type="button"
             onClick={loadData}
-            className="px-3 py-1 bg-[#21262d] text-[#e6edf3] rounded-lg hover:bg-[#30363d] text-xs transition-colors"
+            className="px-3 py-1 bg-[#21262d] text-[#e6edf3] rounded-lg hover:bg-[#30363d] text-xs transition-colors cursor-pointer"
           >
             Tentar novamente
           </button>
@@ -386,12 +254,23 @@ export const GlobalEconomyWidget: React.FC = () => {
             return (
               <div
                 key={item.key}
-                className="bg-[#0e1117] hover:bg-[#161b22] border border-[#30363d] hover:border-[#58a6ff]/50 rounded-xl p-4 transition-all duration-150 flex flex-col justify-between group shadow-sm"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleCardClick(item)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleCardClick(item);
+                  }
+                }}
+                className="bg-[#0e1117] hover:bg-[#161b22] border border-[#30363d] hover:border-[#58a6ff]/60 hover:shadow-lg rounded-xl p-4 transition-all duration-150 flex flex-col justify-between group shadow-sm cursor-pointer select-none"
+                title={`Clique para ver o gráfico e análise detalhada de ${pairDisplay}`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-mono text-xs font-bold text-[#58a6ff]">
-                      {pairDisplay}
+                    <span className="font-mono text-xs font-bold text-[#58a6ff] group-hover:text-white transition-colors flex items-center gap-1">
+                      <span>{pairDisplay}</span>
+                      <ChevronRight className="w-3 h-3 text-[#58a6ff] opacity-0 group-hover:opacity-100 transition-opacity" />
                     </span>
                     <span
                       className={`flex items-center gap-0.5 text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
@@ -412,14 +291,14 @@ export const GlobalEconomyWidget: React.FC = () => {
                     </span>
                   </div>
 
-                  <h4 className="text-xs font-semibold text-[#e6edf3] truncate mb-2" title={item.name}>
+                  <h4 className="text-xs font-semibold text-[#e6edf3] truncate mb-2 group-hover:text-[#58a6ff] transition-colors" title={item.name}>
                     {item.name}
                   </h4>
 
                   {/* Main Price (Bid / Compra) */}
                   <div className="flex items-baseline justify-between mb-2 pb-2 border-b border-[#21262d]">
                     <span className="text-[11px] text-[#8b949e]">Compra (Bid):</span>
-                    <span className="text-base font-extrabold font-mono text-white">
+                    <span className="text-base font-extrabold font-mono text-white group-hover:text-[#58a6ff] transition-colors">
                       R$ {item.bidNum >= 1000 ? item.bidNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : item.bidNum.toFixed(4)}
                     </span>
                   </div>
@@ -430,13 +309,13 @@ export const GlobalEconomyWidget: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span>Venda (Ask):</span>
                     <span className="text-[#e6edf3]">
-                      R$ {item.askNum.toFixed(4)}
+                      R$ {item.askNum >= 1000 ? item.askNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : item.askNum.toFixed(4)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Máx / Mín Dia:</span>
                     <span className="text-[#e6edf3]">
-                      {item.highNum.toFixed(2)} / {item.lowNum.toFixed(2)}
+                      {item.highNum >= 1000 ? item.highNum.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : item.highNum.toFixed(2)} / {item.lowNum >= 1000 ? item.lowNum.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : item.lowNum.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-[#21262d]/50">
@@ -448,6 +327,10 @@ export const GlobalEconomyWidget: React.FC = () => {
                     >
                       {isUp ? "Alta Diária" : "Queda Diária"} ({item.varBid >= "0" ? "+" : ""}{Number(item.varBid).toFixed(4)})
                     </span>
+                  </div>
+                  <div className="text-[10px] text-[#58a6ff] opacity-80 pt-1 group-hover:opacity-100 flex items-center justify-end gap-1">
+                    <span>Ver análise completa</span>
+                    <ChevronRight className="w-2.5 h-2.5" />
                   </div>
                 </div>
               </div>

@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { RegionalTab, Asset } from "../types/finance";
+import { getLiveRatesToBRL, subscribeToUnifiedCurrencies } from "../services/unifiedCurrencyService";
 import {
   X,
   Bookmark,
@@ -76,36 +77,38 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   const [fromCurrency, setFromCurrency] = useState<CurrencyType>("USD");
   const [toCurrency, setToCurrency] = useState<CurrencyType>("BRL");
   const [isConverterOpen, setIsConverterOpen] = useState<boolean>(true);
+  const [unifiedQuotes, setUnifiedQuotes] = useState<any>(null);
 
-  // Dynamic live rates to BRL based on liveAssets feed
+  useEffect(() => {
+    const unsub = subscribeToUnifiedCurrencies((quotes) => {
+      setUnifiedQuotes(quotes);
+    });
+    return unsub;
+  }, []);
+
+  // Dynamic live rates to BRL based on unified currency service and liveAssets feed
   const liveRatesToBRL = useMemo<Record<CurrencyType, number>>(() => {
+    const baseRates = getLiveRatesToBRL(unifiedQuotes || undefined);
+
     const usdBrlAsset = liveAssets.find((a) => a.id === "usd-brl" || a.ticker.includes("USD / BRL"));
     const eurBrlAsset = liveAssets.find((a) => a.id === "eur-brl" || a.ticker.includes("EUR / BRL"));
     const gbpBrlAsset = liveAssets.find((a) => a.id === "gbp-brl" || a.ticker.includes("GBP / BRL"));
     const jpyBrlAsset = liveAssets.find((a) => a.id === "jpy-brl" || a.ticker.includes("JPY / BRL"));
-    const btcAsset = liveAssets.find((a) => a.id === "bitcoin" || a.ticker === "BTC");
-    const ethAsset = liveAssets.find((a) => a.id === "ether" || a.ticker === "ETH");
+    const btcAsset = liveAssets.find((a) => a.id === "btc-brl" || a.id === "bitcoin" || a.ticker === "BTC");
+    const ethAsset = liveAssets.find((a) => a.id === "eth-brl" || a.id === "ether" || a.ticker === "ETH");
     const solAsset = liveAssets.find((a) => a.id === "solana" || a.ticker === "SOL");
-
-    const usdPriceInBrl = usdBrlAsset?.price || 5.20;
-    const eurPriceInBrl = eurBrlAsset?.price || 5.90;
-    const gbpPriceInBrl = gbpBrlAsset?.price || 6.95;
-    const jpyPriceInBrl = jpyBrlAsset?.price || 0.0345;
-    const btcPriceInUsd = btcAsset?.price || 83400;
-    const ethPriceInUsd = ethAsset?.price || 2650;
-    const solPriceInUsd = solAsset?.price || 120;
 
     return {
       BRL: 1.0,
-      USD: usdPriceInBrl,
-      EUR: eurPriceInBrl,
-      GBP: gbpPriceInBrl,
-      JPY: jpyPriceInBrl,
-      BTC: btcPriceInUsd * usdPriceInBrl,
-      ETH: ethPriceInUsd * usdPriceInBrl,
-      SOL: solPriceInUsd * usdPriceInBrl,
+      USD: usdBrlAsset?.price || baseRates.USD || 5.4117,
+      EUR: eurBrlAsset?.price || baseRates.EUR || 6.0354,
+      GBP: gbpBrlAsset?.price || baseRates.GBP || 7.2145,
+      JPY: jpyBrlAsset?.price || baseRates.JPY || 0.0349,
+      BTC: (btcAsset?.price && btcAsset.price > 10000 ? btcAsset.price : baseRates.BTC) || 548200,
+      ETH: (ethAsset?.price && ethAsset.price > 1000 ? ethAsset.price : baseRates.ETH) || 17180,
+      SOL: (solAsset?.price && solAsset.price > 50 ? solAsset.price * (usdBrlAsset?.price || baseRates.USD || 5.4117) : baseRates.SOL) || 820,
     };
-  }, [liveAssets]);
+  }, [unifiedQuotes, liveAssets]);
 
   // Conversion Calculation with Live Rates
   const conversionResult = useMemo(() => {

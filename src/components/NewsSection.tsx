@@ -19,6 +19,20 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onSelectTicker, liveNe
       ? newsSourceList
       : newsSourceList.filter((n) => n.category === selectedCategory);
 
+  const getSafeNewsUrl = (rawUrl?: string, title?: string): string => {
+    if (!rawUrl || rawUrl.trim() === "" || rawUrl === "#") {
+      const query = encodeURIComponent((title || "mercado financeiro").slice(0, 80));
+      return `https://news.google.com/search?q=${query}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+    }
+    let url = rawUrl.trim();
+    if (url.startsWith("http://")) {
+      url = url.replace(/^http:\/\//i, "https://");
+    } else if (!url.startsWith("https://")) {
+      url = `https://${url}`;
+    }
+    return url;
+  };
+
   return (
     <section className="w-full py-4" id="portal-news-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,12 +59,16 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onSelectTicker, liveNe
             </div>
 
             {/* Category filter pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none nav-scroll-container flex-nowrap"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               {categories.map((cat) => (
                 <button
+                  type="button"
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
                     selectedCategory === cat
                       ? "bg-[#21262d] text-[#58a6ff] border border-[#58a6ff]"
                       : "bg-[#0e1117] text-[#8b949e] hover:text-[#e6edf3] border border-[#30363d]"
@@ -85,63 +103,67 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onSelectTicker, liveNe
                 </div>
               ))
             ) : (
-              filteredNews.map((news) => (
-              <a
-                key={news.id}
-                href={news.url || "#"}
-                target={news.url ? "_blank" : undefined}
-                rel={news.url ? "noopener noreferrer" : undefined}
-                className="bg-[#0e1117]/60 hover:bg-[#21262d]/70 border border-[#30363d]/70 hover:border-[#58a6ff]/50 rounded-xl p-4 flex flex-col justify-between transition-all duration-150 group block"
-              >
-                <div>
-                  {/* Source and Time */}
-                  <div className="flex items-center justify-between gap-2 mb-2 text-xs text-[#8b949e]">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-[#58a6ff] bg-[#58a6ff]/10 px-2 py-0.5 rounded border border-[#58a6ff]/20">
-                        {news.source}
-                      </span>
-                      <span className="flex items-center gap-1 text-[11px]">
-                        <Clock className="w-3 h-3" />
-                        {news.timeAgo}
+              filteredNews.map((news) => {
+                const safeUrl = getSafeNewsUrl(news.url, news.title);
+                return (
+                  <a
+                    key={news.id}
+                    href={safeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[#0e1117]/60 hover:bg-[#21262d]/70 border border-[#30363d]/70 hover:border-[#58a6ff]/50 rounded-xl p-4 flex flex-col justify-between transition-all duration-150 group block cursor-pointer"
+                  >
+                    <div>
+                      {/* Source and Time */}
+                      <div className="flex items-center justify-between gap-2 mb-2 text-xs text-[#8b949e]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-[#58a6ff] bg-[#58a6ff]/10 px-2 py-0.5 rounded border border-[#58a6ff]/20">
+                            {news.source}
+                          </span>
+                          <span className="flex items-center gap-1 text-[11px]">
+                            <Clock className="w-3 h-3" />
+                            {news.timeAgo}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[#8b949e] bg-[#161b22] px-1.5 py-0.5 rounded border border-[#30363d]">
+                          {news.category}
+                        </span>
+                      </div>
+
+                      {/* Headline */}
+                      <h3 className="text-xs sm:text-sm font-semibold text-[#e6edf3] group-hover:text-white leading-snug line-clamp-3">
+                        {news.title}
+                      </h3>
+                    </div>
+
+                    {/* Related Ticker Tags and Read link */}
+                    <div className="pt-3 mt-3 border-t border-[#21262d] flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {news.relatedTickers?.map((ticker) => (
+                          <button
+                            key={ticker}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (onSelectTicker) onSelectTicker(ticker);
+                            }}
+                            className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#161b22] hover:bg-[#30363d] text-[#e6edf3] border border-[#30363d] transition-colors cursor-pointer"
+                          >
+                            {ticker}
+                          </button>
+                        ))}
+                      </div>
+
+                      <span className="text-xs text-[#58a6ff] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform font-medium">
+                        <span>Ler matéria</span>
+                        <ExternalLink className="w-3 h-3" />
                       </span>
                     </div>
-                    <span className="text-[10px] text-[#8b949e] bg-[#161b22] px-1.5 py-0.5 rounded border border-[#30363d]">
-                      {news.category}
-                    </span>
-                  </div>
-
-                  {/* Headline */}
-                  <h3 className="text-xs sm:text-sm font-semibold text-[#e6edf3] group-hover:text-white leading-snug line-clamp-3">
-                    {news.title}
-                  </h3>
-                </div>
-
-                {/* Related Ticker Tags and Read link */}
-                <div className="pt-3 mt-3 border-t border-[#21262d] flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {news.relatedTickers?.map((ticker) => (
-                      <button
-                        key={ticker}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (onSelectTicker) onSelectTicker(ticker);
-                        }}
-                        className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#161b22] hover:bg-[#30363d] text-[#e6edf3] border border-[#30363d] transition-colors cursor-pointer"
-                      >
-                        {ticker}
-                      </button>
-                    ))}
-                  </div>
-
-                  <span className="text-xs text-[#58a6ff] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                    <span>Ler matéria</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </span>
-                </div>
-              </a>
-            )))}
+                  </a>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

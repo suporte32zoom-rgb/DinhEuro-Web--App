@@ -10,9 +10,14 @@ interface MarketMoversGridProps {
     topGainers: MarketMoverItem[];
     topLosers: MarketMoverItem[];
   } | null;
+  onViewAllStocks?: () => void;
 }
 
-export const MarketMoversGrid: React.FC<MarketMoversGridProps> = ({ onSelectTicker, liveMovers }) => {
+export const MarketMoversGrid: React.FC<MarketMoversGridProps> = ({
+  onSelectTicker,
+  liveMovers,
+  onViewAllStocks,
+}) => {
   const isLoading = !liveMovers;
   const activeItems = liveMovers?.mostActive || [];
   const gainersItems = liveMovers?.topGainers || [];
@@ -116,7 +121,16 @@ export const MarketMoversGrid: React.FC<MarketMoversGridProps> = ({ onSelectTick
         {/* Footer info */}
         <div className="pt-3 mt-2 border-t border-[#21262d] text-center">
           <button
-            onClick={() => onSelectTicker("IBOV")}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onViewAllStocks) {
+                onViewAllStocks();
+              } else {
+                onSelectTicker("IBOV");
+              }
+            }}
             className="text-[11px] text-[#58a6ff] hover:underline font-medium cursor-pointer"
           >
             Ver todas as ações do mercado &rarr;
