@@ -255,14 +255,26 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
         {/* Positions List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {enrichedPositions.length === 0 ? (
-            <div className="text-center py-10 space-y-2">
-              <PieChart className="w-10 h-10 text-[#30363d] mx-auto" />
-              <p className="text-xs text-[#8b949e]">
-                Nenhuma posição cadastrada na carteira.
-              </p>
-              <p className="text-[11px] text-[#58a6ff] cursor-pointer hover:underline" onClick={() => setShowAddForm(true)}>
-                + Adicionar primeiro ativo ao portfólio
-              </p>
+            <div className="text-center py-12 px-4 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#1f6feb]/10 text-[#58a6ff] mx-auto flex items-center justify-center border border-[#1f6feb]/20">
+                <PieChart className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[#e6edf3]">
+                  Nenhuma posição cadastrada na carteira
+                </p>
+                <p className="text-xs text-[#8b949e] max-w-md mx-auto mt-1 leading-relaxed">
+                  Seu portfólio inicia 100% zerado sem ativos pré-selecionados. Clique no botão abaixo para registrar a compra do seu primeiro ativo e acompanhar o patrimônio com cotações ao vivo.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1f6feb] hover:bg-[#388bfd] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                Adicionar primeiro ativo ao portfólio
+              </button>
             </div>
           ) : (
             enrichedPositions.map((pos) => {

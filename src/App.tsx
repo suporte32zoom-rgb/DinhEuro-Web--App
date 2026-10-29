@@ -297,51 +297,50 @@ export default function App() {
     return () => clearInterval(interval);
   }, [refreshAllMarketData]);
 
-  // Watchlist state (Local Storage persisted)
+  // Watchlist state (Local Storage persisted - defaults to empty: zero pre-selected items)
   const [watchlistIds, setWatchlistIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem("dinheuro_watchlist");
-      return saved ? JSON.parse(saved) : ["ibov", "petr4", "sp500", "btc-brl", "usd-brl"];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // If legacy pre-seeded mock array is detected, reset to empty
+          const legacySeed = ["ibov", "petr4", "sp500", "btc-brl", "usd-brl"];
+          const isLegacySeed =
+            parsed.length === legacySeed.length &&
+            parsed.every((item, idx) => item === legacySeed[idx]);
+          if (isLegacySeed) {
+            localStorage.setItem("dinheuro_watchlist", JSON.stringify([]));
+            return [];
+          }
+          return parsed;
+        }
+      }
+      return [];
     } catch {
-      return ["ibov", "petr4", "sp500", "btc-brl", "usd-brl"];
+      return [];
     }
   });
 
-  // Portfolio positions state (Local Storage persisted)
+  // Portfolio positions state (Local Storage persisted - defaults to empty: zero pre-selected items)
   const [portfolioPositions, setPortfolioPositions] = useState<PortfolioPosition[]>(() => {
     try {
       const saved = localStorage.getItem("dinheuro_portfolio");
-      return saved
-        ? JSON.parse(saved)
-        : [
-            {
-              id: "pos-1",
-              assetId: "petr4",
-              ticker: "PETR4",
-              name: "Petrobras PN",
-              quantity: 200,
-              avgBuyPrice: 35.8,
-              purchaseDate: "2025-01-15",
-            },
-            {
-              id: "pos-2",
-              assetId: "vale3",
-              ticker: "VALE3",
-              name: "Vale S.A.",
-              quantity: 150,
-              avgBuyPrice: 58.2,
-              purchaseDate: "2025-02-01",
-            },
-            {
-              id: "pos-3",
-              assetId: "btc-brl",
-              ticker: "BTC/BRL",
-              name: "Bitcoin",
-              quantity: 0.08,
-              avgBuyPrice: 512000,
-              purchaseDate: "2025-02-10",
-            },
-          ];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // If legacy pre-seeded mock positions are detected, reset to empty
+          const hasLegacyMock = parsed.some(
+            (p: any) => p && (p.id === "pos-1" || p.id === "pos-2" || p.id === "pos-3")
+          );
+          if (hasLegacyMock && parsed.length <= 3) {
+            localStorage.setItem("dinheuro_portfolio", JSON.stringify([]));
+            return [];
+          }
+          return parsed;
+        }
+      }
+      return [];
     } catch {
       return [];
     }

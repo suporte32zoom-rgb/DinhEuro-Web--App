@@ -38,13 +38,15 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({
                 Minha Lista de Observação
               </h3>
               <p className="text-xs text-[#8b949e]">
-                {watchlistAssets.length} ativos favoritados para acompanhamento contínuo
+                {watchlistAssets.length === 0
+                  ? "Nenhum ativo favoritado. Adicione ativos para acompanhamento contínuo"
+                  : `${watchlistAssets.length} ${watchlistAssets.length === 1 ? "ativo favoritado" : "ativos favoritados"} para acompanhamento contínuo`}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#8b949e] hover:text-white hover:bg-[#30363d]"
+            className="p-1.5 rounded-lg text-[#8b949e] hover:text-white hover:bg-[#30363d] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -53,12 +55,23 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({
         {/* Watchlist Items */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
           {watchlistAssets.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#8b949e] space-y-2">
-              <Bookmark className="w-8 h-8 mx-auto text-[#30363d]" />
-              <p className="font-semibold text-[#e6edf3]">Sua lista está vazia</p>
-              <p className="text-[11px]">
-                Navegue pelos ativos e clique em &ldquo;+ Adicionar à lista&rdquo; para fixar aqui.
-              </p>
+            <div className="py-12 text-center text-xs text-[#8b949e] space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#e3b341]/10 text-[#e3b341] mx-auto flex items-center justify-center border border-[#e3b341]/20">
+                <Bookmark className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-[#e6edf3]">Sua lista está zerada</p>
+                <p className="text-[11px] text-[#8b949e] max-w-sm mx-auto mt-1 leading-relaxed">
+                  Nenhum ativo foi pré-selecionado. Navegue pelo mercado e clique no botão &ldquo;+ Adicionar à lista&rdquo; na página de qualquer ativo para monitorá-lo aqui.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] text-xs font-semibold border border-[#30363d] transition-colors cursor-pointer"
+              >
+                Explorar Mercado de Ativos
+              </button>
             </div>
           ) : (
             watchlistAssets.map((asset) => {
