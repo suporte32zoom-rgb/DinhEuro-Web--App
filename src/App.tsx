@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Asset,
   RegionalTab,
@@ -365,74 +365,121 @@ export default function App() {
     }
   }, [portfolioPositions]);
 
-  // Handle URL hash changes for deep linking (e.g. #asset/petr4, #asset/usd-brl, #asset/eur-brl)
+  // Keep stable refs to prevent re-entrant route listeners from resetting state on polling
+  const liveAssetsRef = useRef<Asset[]>(liveAssets);
+  useEffect(() => {
+    liveAssetsRef.current = liveAssets;
+  }, [liveAssets]);
+
+  const selectedAssetRef = useRef<Asset | null>(selectedAsset);
+  useEffect(() => {
+    selectedAssetRef.current = selectedAsset;
+  }, [selectedAsset]);
+
+  // Robust asset resolver by ID, ticker or code
+  const resolveAssetByKey = useCallback((rawKey: string): Asset | null => {
+    if (!rawKey) return null;
+    const cleanRaw = decodeURIComponent(rawKey).trim().toLowerCase();
+    const pool = liveAssetsRef.current && liveAssetsRef.current.length > 0 ? liveAssetsRef.current : ALL_ASSETS;
+
+    let found = pool.find(
+      (a) => a.id.toLowerCase() === cleanRaw || a.ticker.toLowerCase() === cleanRaw
+    );
+
+    if (!found) {
+      const cleanKey = cleanRaw.replace(/[-_/]/g, "").toUpperCase();
+      const matchQuote = Object.values(DEFAULT_UNIFIED_CURRENCIES).find(
+        (q) =>
+          `${q.code}${q.codein}`.toUpperCase() === cleanKey ||
+          `${q.code.toLowerCase()}-${q.codein.toLowerCase()}` === cleanRaw ||
+          q.code.toLowerCase() === cleanRaw
+      );
+      if (matchQuote) {
+        found = economyItemToAsset(matchQuote);
+      }
+    }
+
+    return found || null;
+  }, []);
+
+  // Stable URL hash listener: Runs ONLY on mount or true user hashchange
+  // Never re-executes on liveAssets background polling or data refresh!
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
       if (hash.startsWith("#asset/")) {
-        const rawKey = hash.replace("#asset/", "").toLowerCase();
-        let found = liveAssets.find(
-          (a) => a.id.toLowerCase() === rawKey || a.ticker.toLowerCase() === rawKey
-        );
-        // If not found in live catalog, check unified currency service
-        if (!found) {
-          const cleanKey = rawKey.replace(/[-_/]/g, "").toUpperCase();
-          const matchQuote = Object.values(DEFAULT_UNIFIED_CURRENCIES).find(
-            (q) =>
-              `${q.code}${q.codein}`.toUpperCase() === cleanKey ||
-              `${q.code.toLowerCase()}-${q.codein.toLowerCase()}` === rawKey ||
-              q.code.toLowerCase() === rawKey
-          );
-          if (matchQuote) {
-            found = economyItemToAsset(matchQuote);
-          }
-        }
-        if (found) {
+        const rawKey = hash.replace("#asset/", "");
+        const found = resolveAssetByKey(rawKey);
+        if (found && selectedAssetRef.current?.id !== found.id) {
           setSelectedAsset(found);
-          window.scrollTo({ top: 0, behavior: "smooth" });
         }
       } else if (hash === "" || hash === "#") {
-        setSelectedAsset(null);
+        // Only return to home if user explicitly cleared hash via browser back/forward
+        if (selectedAssetRef.current !== null) {
+          setSelectedAsset(null);
+        }
       }
     };
 
+    // Run once on initial page load to support deep links
     handleHash();
+
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
-  }, [liveAssets]);
+  }, [resolveAssetByKey]);
 
-  const handleSelectAsset = (asset: Asset) => {
+  const handleSelectAsset = useCallback((asset: Asset) => {
     setSelectedAsset(asset);
-    window.location.hash = `#asset/${asset.id}`;
+    const targetHash = `#asset/${encodeURIComponent(asset.id)}`;
+    if (window.location.hash !== targetHash) {
+      try {
+        window.history.pushState(null, "", targetHash);
+      } catch {
+        window.location.hash = targetHash;
+      }
+    }
+    // Only scroll to top on explicit user navigation to an asset
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
-  const handleSelectTicker = (ticker: string) => {
-    const asset = liveAssets.find(
+  const handleSelectTicker = useCallback((ticker: string) => {
+    const pool = liveAssetsRef.current && liveAssetsRef.current.length > 0 ? liveAssetsRef.current : ALL_ASSETS;
+    const asset = pool.find(
       (a) => a.ticker.toLowerCase() === ticker.toLowerCase() || a.id.toLowerCase() === ticker.toLowerCase()
     );
     if (asset) {
       handleSelectAsset(asset);
     } else {
-      // Default to IBOV if not directly matched
-      const ibov = liveAssets.find((a) => a.id === "ibov" || a.id === "ibovespa");
+      const ibov = pool.find((a) => a.id === "ibov" || a.id === "ibovespa");
       if (ibov) handleSelectAsset(ibov);
     }
-  };
+  }, [handleSelectAsset]);
 
-  const handleGoHome = () => {
+  const handleGoHome = useCallback(() => {
     setSelectedAsset(null);
-    window.location.hash = "";
+    if (window.location.hash) {
+      try {
+        window.history.pushState(null, "", window.location.pathname);
+      } catch {
+        window.location.hash = "";
+      }
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
   const handleViewAllStocks = useCallback(() => {
     setActiveTab("América Latina");
     setSelectedSector("all");
     setActiveTag("");
-    if (selectedAsset) {
+    if (selectedAssetRef.current) {
       setSelectedAsset(null);
-      window.location.hash = "";
+      if (window.location.hash) {
+        try {
+          window.history.pushState(null, "", window.location.pathname);
+        } catch {
+          window.location.hash = "";
+        }
+      }
     }
     setTimeout(() => {
       const el = document.getElementById("market-assets-section");
@@ -442,7 +489,7 @@ export default function App() {
         window.scrollTo({ top: 380, behavior: "smooth" });
       }
     }, 50);
-  }, [selectedAsset]);
+  }, []);
 
   const handleToggleWatchlist = (asset: Asset) => {
     setWatchlistIds((prev) =>

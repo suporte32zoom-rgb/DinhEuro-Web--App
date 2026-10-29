@@ -119,25 +119,6 @@ export const InstitutionalModal: React.FC<InstitutionalModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleShare}
-              className="p-2 rounded-lg text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors cursor-pointer text-xs flex items-center gap-1.5"
-              title="Copiar link permanente desta página"
-            >
-              {copiedLink ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-[#00c853]" />
-                  <span className="text-[#00c853] font-medium hidden sm:inline">Copiado</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Compartilhar</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
               onClick={handlePrint}
               className="p-2 rounded-lg text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors cursor-pointer text-xs flex items-center gap-1.5"
               title="Imprimir documento legal"
