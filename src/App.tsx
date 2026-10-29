@@ -427,6 +427,22 @@ export default function App() {
     return () => window.removeEventListener("hashchange", handleHash);
   }, [resolveAssetByKey]);
 
+  // Google Analytics Pageview tracker on view/route change
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      const pagePath = selectedAsset
+        ? `/#asset/${selectedAsset.id}`
+        : window.location.pathname + (window.location.hash || "");
+      const pageTitle = selectedAsset
+        ? `${selectedAsset.ticker} - ${selectedAsset.name} | DinhEuro`
+        : document.title;
+      (window as any).gtag("event", "page_view", {
+        page_path: pagePath,
+        page_title: pageTitle,
+      });
+    }
+  }, [selectedAsset]);
+
   const handleSelectAsset = useCallback((asset: Asset) => {
     setSelectedAsset(asset);
     const targetHash = `#asset/${encodeURIComponent(asset.id)}`;
