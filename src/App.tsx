@@ -37,8 +37,10 @@ import { DinhEuroAICopilot } from "./components/DinhEuroAICopilot";
 import { GoogleChatModal } from "./components/GoogleChatModal";
 import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
 import { notificationService, NotificationSettings } from "./services/notificationService";
+import { InstitutionalModal } from "./components/InstitutionalModal";
+import { LGPDConsentBanner } from "./components/LGPDConsentBanner";
+import { LegalDocId } from "./types/legal";
 import { Footer } from "./components/Footer";
-import { Sparkles } from "lucide-react";
 import { usePWA } from "./hooks/usePWA";
 
 export default function App() {
@@ -105,6 +107,51 @@ export default function App() {
   const [googleChatOpen, setGoogleChatOpen] = useState(false);
   const [chatShareText, setChatShareText] = useState("");
   const [deepDiveTopic, setDeepDiveTopic] = useState<AIAccordionTopic | null>(null);
+
+  // Institutional, Legal & LGPD Compliance Modal State
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [currentLegalDoc, setCurrentLegalDoc] = useState<LegalDocId>("termos-de-uso");
+
+  // Sync browser URL paths (/termos-de-uso, /politica-de-privacidade, /politica-de-cookies, /sobre, /disclaimer)
+  useEffect(() => {
+    const checkLegalRoute = () => {
+      const rawPath = window.location.pathname.replace(/^\//, "").toLowerCase();
+      if (
+        rawPath === "termos-de-uso" ||
+        rawPath === "politica-de-privacidade" ||
+        rawPath === "politica-de-cookies" ||
+        rawPath === "sobre" ||
+        rawPath === "disclaimer"
+      ) {
+        setCurrentLegalDoc(rawPath as LegalDocId);
+        setLegalModalOpen(true);
+      }
+    };
+
+    checkLegalRoute();
+    window.addEventListener("popstate", checkLegalRoute);
+    return () => window.removeEventListener("popstate", checkLegalRoute);
+  }, []);
+
+  const handleOpenLegalDoc = useCallback((docId: LegalDocId) => {
+    setCurrentLegalDoc(docId);
+    setLegalModalOpen(true);
+    window.history.pushState({}, "", `/${docId}`);
+  }, []);
+
+  const handleCloseLegalModal = useCallback(() => {
+    setLegalModalOpen(false);
+    const rawPath = window.location.pathname.replace(/^\//, "").toLowerCase();
+    if (
+      rawPath === "termos-de-uso" ||
+      rawPath === "politica-de-privacidade" ||
+      rawPath === "politica-de-cookies" ||
+      rawPath === "sobre" ||
+      rawPath === "disclaimer"
+    ) {
+      window.history.pushState({}, "", "/");
+    }
+  }, []);
 
   // Push Notifications Modal & Preferences State
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -577,6 +624,7 @@ export default function App() {
         watchlistAssets={watchlistAssets}
         onSelectAsset={handleSelectAsset}
         liveAssets={liveAssets}
+        onOpenLegalDoc={handleOpenLegalDoc}
       />
 
       <GlobalSearchModal
@@ -636,17 +684,16 @@ export default function App() {
         initialAsset={alertTargetAsset}
       />
 
-      {/* Floating Action Button for DinhEuro AI */}
-      <button
-        id="floating-ai-copilot-btn"
-        onClick={() => setCopilotOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-[#1f6feb] via-[#8957e5] to-[#f0883e] text-white font-semibold text-xs sm:text-sm shadow-xl shadow-black/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20 group"
-        title="Abrir IA Especialista DinhEuro"
-      >
-        <Sparkles className="w-4 h-4 text-amber-300 animate-spin-slow group-hover:rotate-45 transition-transform" />
-        <span>IA DinhEuro</span>
-        <span className="w-2 h-2 rounded-full bg-[#00c853] animate-pulse"></span>
-      </button>
+      {/* Institutional, Jurídico & Compliance Modal */}
+      <InstitutionalModal
+        isOpen={legalModalOpen}
+        onClose={handleCloseLegalModal}
+        initialDocId={currentLegalDoc}
+        onSelectDoc={(docId) => setCurrentLegalDoc(docId)}
+      />
+
+      {/* Interactive LGPD Consent & Privacy Banner */}
+      <LGPDConsentBanner onOpenLegalDoc={handleOpenLegalDoc} />
 
       <PWAInstallModal
         isOpen={pwaModalOpen}
@@ -656,8 +703,8 @@ export default function App() {
         isInstalled={isInstalled}
       />
 
-      {/* Global Footer */}
-      <Footer />
+      {/* Global Footer with Legal & Compliance Navigation */}
+      <Footer onOpenLegalDoc={handleOpenLegalDoc} />
     </div>
   );
 }
