@@ -1,6 +1,7 @@
 /**
  * DinhEuro Finanças - Serviço Financial Modeling Prep (FMP)
  * Suporte a cotações em tempo real, perfil corporativo, DRE (demonstrações financeiras) e busca.
+ * Inclui cache em memória, circuit breaker para HTTP 429 e failover silencioso.
  */
 
 const DEFAULT_FMP_KEY = "GJaGtHdggEtpz6erXjYrSNchdFk8FJwm";
@@ -91,49 +92,101 @@ export interface FMPSearchResult {
   exchangeShortName?: string;
 }
 
+// In-memory cache to prevent 429 quota exhaustion
+const tsClientQuoteCache = new Map<string, { data: FMPQuote; timestamp: number }>();
+const tsClientProfileCache = new Map<string, { data: FMPCompanyProfile; timestamp: number }>();
+const tsClientFinancialsCache = new Map<string, { data: FMPIncomeStatement[]; timestamp: number }>();
+let tsClientCooldownUntil = 0;
+
 /**
- * 1. Busca cotação em tempo real via FMP
+ * 1. Busca cotação em tempo real via FMP com proxy backend, cache e proteção 429
  */
 export async function obterCotacaoFMP(symbol: string): Promise<FMPQuote | null> {
+  if (!symbol) return null;
   const cleanSymbol = symbol.trim().toUpperCase();
+  const now = Date.now();
 
-  // No browser, usa proxy local para evitar CORS e ocultar credenciais
+  const cached = tsClientQuoteCache.get(cleanSymbol);
+  if (cached && now - cached.timestamp < 60000) {
+    return cached.data;
+  }
+
+  if (now < tsClientCooldownUntil) {
+    return cached?.data || null;
+  }
+
+  // No browser, usa proxy local para evitar CORS, ocultar credenciais e usar cache do servidor
   if (typeof window !== "undefined") {
     try {
       const res = await fetch(`/api/fmp/quote?symbol=${encodeURIComponent(cleanSymbol)}`);
       if (res.ok) {
         const data = await res.json();
-        if (data && data.price !== undefined) return data as FMPQuote;
+        if (data && typeof data.price === "number") {
+          tsClientQuoteCache.set(cleanSymbol, { data: data as FMPQuote, timestamp: now });
+          return data as FMPQuote;
+        }
+      } else if (res.status === 429) {
+        tsClientCooldownUntil = now + 120000;
+        return cached?.data || null;
       }
     } catch {
-      // continua para fallback
+      // continua para fallback silencioso
     }
   }
 
   const url = `${FMP_BASE_URL}/quote?symbol=${encodeURIComponent(cleanSymbol)}&apikey=${FMP_API_KEY}`;
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (res.status === 429) {
+      tsClientCooldownUntil = now + 120000;
+      console.warn(`[FMP] Rate limit de cotação ativado para ${cleanSymbol}. Usando dados resilientes.`);
+      return cached?.data || null;
+    }
+
+    if (!res.ok) return cached?.data || null;
+
     const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? (data[0] as FMPQuote) : null;
-  } catch (error) {
-    console.error(`[FMP] Erro ao buscar cotação para ${cleanSymbol}:`, error);
-    return null;
+    const quote = Array.isArray(data) && data.length > 0 ? (data[0] as FMPQuote) : null;
+    if (quote) {
+      tsClientQuoteCache.set(cleanSymbol, { data: quote, timestamp: now });
+    }
+    return quote;
+  } catch (error: any) {
+    console.warn(`[FMP] Conexão alternativa acionada para ${cleanSymbol}`);
+    return cached?.data || null;
   }
 }
 
 /**
- * 2. Busca perfil institucional da empresa via FMP
+ * 2. Busca perfil institucional da empresa via FMP com cache e tolerância a falhas
  */
 export async function obterPerfilFMP(symbol: string): Promise<FMPCompanyProfile | null> {
+  if (!symbol) return null;
   const cleanSymbol = symbol.trim().toUpperCase();
+  const now = Date.now();
+
+  const cached = tsClientProfileCache.get(cleanSymbol);
+  if (cached && now - cached.timestamp < 300000) {
+    return cached.data;
+  }
+
+  if (now < tsClientCooldownUntil) {
+    return cached?.data || null;
+  }
 
   if (typeof window !== "undefined") {
     try {
       const res = await fetch(`/api/fmp/profile?symbol=${encodeURIComponent(cleanSymbol)}`);
       if (res.ok) {
         const data = await res.json();
-        if (data && data.companyName) return data as FMPCompanyProfile;
+        if (data && data.companyName) {
+          tsClientProfileCache.set(cleanSymbol, { data: data as FMPCompanyProfile, timestamp: now });
+          return data as FMPCompanyProfile;
+        }
       }
     } catch {
       // continua para fallback
@@ -142,13 +195,26 @@ export async function obterPerfilFMP(symbol: string): Promise<FMPCompanyProfile 
 
   const url = `${FMP_BASE_URL}/profile?symbol=${encodeURIComponent(cleanSymbol)}&apikey=${FMP_API_KEY}`;
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (res.status === 429) {
+      tsClientCooldownUntil = now + 120000;
+      return cached?.data || null;
+    }
+
+    if (!res.ok) return cached?.data || null;
+
     const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? (data[0] as FMPCompanyProfile) : null;
-  } catch (error) {
-    console.error(`[FMP] Erro ao buscar perfil corporativo para ${cleanSymbol}:`, error);
-    return null;
+    const profile = Array.isArray(data) && data.length > 0 ? (data[0] as FMPCompanyProfile) : null;
+    if (profile) {
+      tsClientProfileCache.set(cleanSymbol, { data: profile, timestamp: now });
+    }
+    return profile;
+  } catch {
+    return cached?.data || null;
   }
 }
 
@@ -158,14 +224,28 @@ export async function obterPerfilFMP(symbol: string): Promise<FMPCompanyProfile 
 export async function obterDemonstracaoResultadosFMP(
   symbol: string
 ): Promise<FMPIncomeStatement[] | null> {
+  if (!symbol) return null;
   const cleanSymbol = symbol.trim().toUpperCase();
+  const now = Date.now();
+
+  const cached = tsClientFinancialsCache.get(cleanSymbol);
+  if (cached && now - cached.timestamp < 300000) {
+    return cached.data;
+  }
+
+  if (now < tsClientCooldownUntil) {
+    return cached?.data || null;
+  }
 
   if (typeof window !== "undefined") {
     try {
       const res = await fetch(`/api/fmp/financials?symbol=${encodeURIComponent(cleanSymbol)}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) return data as FMPIncomeStatement[];
+        if (Array.isArray(data)) {
+          tsClientFinancialsCache.set(cleanSymbol, { data: data as FMPIncomeStatement[], timestamp: now });
+          return data as FMPIncomeStatement[];
+        }
       }
     } catch {
       // continua para fallback
@@ -174,13 +254,26 @@ export async function obterDemonstracaoResultadosFMP(
 
   const url = `${FMP_BASE_URL}/income-statement?symbol=${encodeURIComponent(cleanSymbol)}&apikey=${FMP_API_KEY}`;
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (res.status === 429) {
+      tsClientCooldownUntil = now + 120000;
+      return cached?.data || null;
+    }
+
+    if (!res.ok) return cached?.data || null;
+
     const data = await res.json();
-    return Array.isArray(data) ? (data as FMPIncomeStatement[]) : null;
-  } catch (error) {
-    console.error(`[FMP] Erro ao buscar DRE para ${cleanSymbol}:`, error);
-    return null;
+    const financials = Array.isArray(data) ? (data as FMPIncomeStatement[]) : null;
+    if (financials) {
+      tsClientFinancialsCache.set(cleanSymbol, { data: financials, timestamp: now });
+    }
+    return financials;
+  } catch {
+    return cached?.data || null;
   }
 }
 
@@ -205,12 +298,16 @@ export async function buscarAtivosFMP(query: string): Promise<FMPSearchResult[]>
 
   const url = `${FMP_BASE_URL}/search-symbol?query=${encodeURIComponent(cleanQuery)}&apikey=${FMP_API_KEY}`;
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) return [];
+
     const data = await res.json();
     return Array.isArray(data) ? (data as FMPSearchResult[]) : [];
-  } catch (error) {
-    console.error(`[FMP] Erro na busca para ${cleanQuery}:`, error);
+  } catch {
     return [];
   }
 }

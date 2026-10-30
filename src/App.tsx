@@ -200,6 +200,7 @@ export default function App() {
             price: quote.price,
             change: quote.change,
             changePercent: quote.changePercent,
+            currency: quote.currency || asset.currency,
             sparkline:
               quote.sparkline && quote.sparkline.length > 0
                 ? quote.sparkline
@@ -235,6 +236,7 @@ export default function App() {
           price: quote.price,
           change: quote.change,
           changePercent: quote.changePercent,
+          currency: quote.currency || cur.currency,
           sparkline:
             quote.sparkline && quote.sparkline.length > 0
               ? quote.sparkline

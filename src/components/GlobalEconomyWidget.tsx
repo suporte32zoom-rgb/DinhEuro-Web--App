@@ -250,6 +250,19 @@ export const GlobalEconomyWidget: React.FC<GlobalEconomyWidgetProps> = ({
           {itemsList.slice(0, 16).map((item) => {
             const isUp = item.pctNum >= 0;
             const pairDisplay = `${item.code} / ${item.codein}`;
+            const isUSD = item.codein === "USD";
+            const isEUR = item.codein === "EUR";
+            const prefix = item.codein === "BRL" ? "R$ " : isUSD ? "US$ " : isEUR ? "€ " : `${item.codein} `;
+            const formatNum = (num: number) => {
+              if (isUSD) {
+                return num >= 1000
+                  ? num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  : num.toFixed(4);
+              }
+              return num >= 1000
+                ? num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : num.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+            };
 
             return (
               <div
@@ -295,27 +308,27 @@ export const GlobalEconomyWidget: React.FC<GlobalEconomyWidgetProps> = ({
                     {item.name}
                   </h4>
 
-                  {/* Main Price (Bid / Compra) */}
+                  {/* Preço Principal (Compra) */}
                   <div className="flex items-baseline justify-between mb-2 pb-2 border-b border-[#21262d]">
-                    <span className="text-[11px] text-[#8b949e]">Compra (Bid):</span>
+                    <span className="text-[11px] text-[#8b949e]">Compra:</span>
                     <span className="text-base font-extrabold font-mono text-white group-hover:text-[#58a6ff] transition-colors">
-                      R$ {item.bidNum >= 1000 ? item.bidNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : item.bidNum.toFixed(4)}
+                      {prefix}{formatNum(item.bidNum)}
                     </span>
                   </div>
                 </div>
 
-                {/* Details: Venda, Máxima, Mínima, Tendência */}
+                {/* Detalhes: Venda, Máxima, Mínima, Tendência */}
                 <div className="space-y-1 text-[11px] font-mono text-[#8b949e]">
                   <div className="flex items-center justify-between">
-                    <span>Venda (Ask):</span>
+                    <span>Venda:</span>
                     <span className="text-[#e6edf3]">
-                      R$ {item.askNum >= 1000 ? item.askNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : item.askNum.toFixed(4)}
+                      {prefix}{formatNum(item.askNum)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Máx / Mín Dia:</span>
+                    <span>Máx. / Mín. Dia:</span>
                     <span className="text-[#e6edf3]">
-                      {item.highNum >= 1000 ? item.highNum.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : item.highNum.toFixed(2)} / {item.lowNum >= 1000 ? item.lowNum.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : item.lowNum.toFixed(2)}
+                      {prefix}{item.highNum >= 1000 ? item.highNum.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : formatNum(item.highNum)} / {prefix}{item.lowNum >= 1000 ? item.lowNum.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : formatNum(item.lowNum)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-[#21262d]/50">

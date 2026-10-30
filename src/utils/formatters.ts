@@ -80,20 +80,30 @@ export function formatCurrency(
 
 /**
  * Formata o preço de exibição de um ativo financeiro com base na sua moeda
+ * Garante R$ para ativos nacionais B3 e US$ para ativos internacionais
  */
 export function formatAssetDisplayPrice(price: number, currency: string = "BRL"): string {
   if (isNaN(price) || price === null || price === undefined) return "0,00";
 
-  const curr = (currency || "BRL").toUpperCase();
+  const raw = (currency || "BRL").trim().toUpperCase();
+  const curr =
+    raw === "R$" || raw === "BRL"
+      ? "BRL"
+      : raw === "US$" || raw === "$" || raw === "USD"
+      ? "USD"
+      : raw === "€" || raw === "EUR"
+      ? "EUR"
+      : raw === "£" || raw === "GBP"
+      ? "GBP"
+      : raw === "¥" || raw === "JPY"
+      ? "JPY"
+      : raw;
+
   if (curr === "BRL") {
-    return price >= 1000
-      ? `R$ ${price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : `R$ ${price.toFixed(2)}`;
+    return `R$ ${price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   if (curr === "USD") {
-    return price >= 1000
-      ? `US$ ${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : `US$ ${price.toFixed(2)}`;
+    return `US$ ${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   if (curr === "EUR") {
     return `€ ${price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -104,8 +114,17 @@ export function formatAssetDisplayPrice(price: number, currency: string = "BRL")
   if (curr === "JPY") {
     return `¥ ${price.toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
   }
+  if (curr === "CNY") {
+    return `¥ ${price.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  if (curr === "HKD") {
+    return `HK$ ${price.toLocaleString("zh-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   if (curr === "INR") {
     return `₹ ${price.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+  }
+  if (curr === "KRW") {
+    return `₩ ${price.toLocaleString("ko-KR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   }
   if (curr === "BTC") {
     return `₿ ${price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`;

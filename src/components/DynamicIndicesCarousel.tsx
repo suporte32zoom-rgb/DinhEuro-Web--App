@@ -25,6 +25,7 @@ import {
   filterAssetsBySectorAndTag,
   SECTOR_DEFINITIONS,
 } from "../utils/assetTaxonomy";
+import { formatAssetDisplayPrice } from "../utils/formatters";
 
 interface DynamicIndicesCarouselProps {
   assets: Asset[];
@@ -90,29 +91,7 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
   };
 
   const formatPrice = (price: number, currency: string) => {
-    if (currency === "BRL") {
-      return price >= 1000
-        ? `R$ ${price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : `R$ ${price.toFixed(2)}`;
-    }
-    if (currency === "USD") {
-      return price >= 1000
-        ? `US$ ${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : `US$ ${price.toFixed(2)}`;
-    }
-    if (currency === "EUR") {
-      return `€ ${price.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-    if (currency === "GBP") {
-      return `£ ${price.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-    if (currency === "JPY") {
-      return `¥ ${price.toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
-    }
-    if (currency === "INR") {
-      return `₹ ${price.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
-    }
-    return `${price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+    return formatAssetDisplayPrice(price, currency);
   };
 
   // Helper to render a single asset card

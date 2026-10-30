@@ -256,7 +256,7 @@ export async function getResilientMarketQuotes(): Promise<Record<string, LiveQuo
   const serverData = await safeFetch<{ success: boolean; quotes: Record<string, LiveQuotePayload> }>(
     `/api/market/quotes?t=${Date.now()}`,
     { method: "GET" },
-    4000
+    6000
   );
 
   if (serverData?.success && serverData.quotes && Object.keys(serverData.quotes).length > 0) {
@@ -337,56 +337,51 @@ export async function getResilientMarketQuotes(): Promise<Record<string, LiveQuo
     }
   }
 
-  // Mescla dados em tempo real da Finnhub para ativos dos EUA
-  const usTickers = ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "TSLA", "META"];
-  await Promise.all(
-    usTickers.map(async (sym) => {
-      try {
-        const finnhubQuote = await obterCotacaoFinnhub(sym);
-        if (finnhubQuote && finnhubQuote.precoAtual > 0) {
-          const id = sym.toLowerCase();
-          if (quotes[id]) {
-            quotes[id] = {
-              ...quotes[id],
-              price: finnhubQuote.precoAtual,
-              change: Number(finnhubQuote.variacao.toFixed(2)),
-              changePercent: Number(finnhubQuote.percentualVariacao.toFixed(2)),
-              open: finnhubQuote.abertura,
-              high: finnhubQuote.maximaDia,
-              low: finnhubQuote.minimaDia,
-              lastUpdated: new Date().toISOString(),
-            };
-          }
-        }
-      } catch {
-        // Silenciosamente ignora falhas individuais na Finnhub
-      }
-    })
-  );
-
-  // Mescla dados em tempo real da FMP Stable para índices, moedas e commodities
-  const fmpMappings: Record<string, string> = {
+  // 2. Finnhub API: Responsável por todo o restante da economia global e ativos
+  // (Ações globais, principais índices, bolsas de valores do mundo e commodities em tempo real)
+  const finnhubAssetMappings: Record<string, string> = {
+    // Ações dos EUA & Globais
+    aapl: "AAPL",
+    nvda: "NVDA",
+    msft: "MSFT",
+    amzn: "AMZN",
+    googl: "GOOGL",
+    tsla: "TSLA",
+    meta: "META",
+    // Principais Índices Globais & Bolsas de Valores
     "sp-500": "SPY",
     nasdaq: "QQQ",
     "dow-jones": "DIA",
-    "usd-eur": "EURUSD",
-    "ouro-futuro": "GCUSD",
+    "russell-2000": "IWM",
+    dax: "EWG",
+    "ftse-100": "EWU",
+    "cac-40": "FEZ",
+    "euro-stoxx-50": "FEZ",
+    "nikkei-225": "EWJ",
+    "sse-composite": "MCHI",
+    "hang-seng": "FXI",
+    kospi: "EWY",
+    // Commodities Globais
+    "ouro-futuro": "GLD",
+    "petroleo-brent": "USO",
+    "soja-futuro": "SOYB",
+    "gas-natural": "UNG",
+    "sp-500-futuros": "SPY",
   };
 
   await Promise.all(
-    Object.entries(fmpMappings).map(async ([id, fmpSymbol]) => {
+    Object.entries(finnhubAssetMappings).map(async ([id, finnhubSymbol]) => {
       try {
-        const fmpQuote = await obterCotacaoFMP(fmpSymbol);
-        if (fmpQuote && fmpQuote.price > 0 && quotes[id]) {
+        const finnhubQuote = await obterCotacaoFinnhub(finnhubSymbol);
+        if (finnhubQuote && finnhubQuote.precoAtual > 0 && quotes[id]) {
           quotes[id] = {
             ...quotes[id],
-            price: fmpQuote.price,
-            change: Number(fmpQuote.change.toFixed(2)),
-            changePercent: Number(fmpQuote.changePercentage.toFixed(2)),
-            open: fmpQuote.open || fmpQuote.price,
-            high: fmpQuote.dayHigh || fmpQuote.price,
-            low: fmpQuote.dayLow || fmpQuote.price,
-            volume: fmpQuote.volume ? `US$ ${(fmpQuote.volume / 1000000).toFixed(1)} Mi` : quotes[id].volume,
+            price: finnhubQuote.precoAtual,
+            change: Number(finnhubQuote.variacao.toFixed(2)),
+            changePercent: Number(finnhubQuote.percentualVariacao.toFixed(2)),
+            open: finnhubQuote.abertura || finnhubQuote.precoAtual,
+            high: finnhubQuote.maximaDia || finnhubQuote.precoAtual,
+            low: finnhubQuote.minimaDia || finnhubQuote.precoAtual,
             lastUpdated: new Date().toISOString(),
           };
         }

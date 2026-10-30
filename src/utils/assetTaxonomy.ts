@@ -24,7 +24,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Tech: {
     id: "Tech",
-    name: "Tech",
+    name: "Tecnologia",
     label: "Tecnologia & Inovação",
     color: "#58a6ff",
     bgColor: "rgba(88, 166, 255, 0.12)",
@@ -34,7 +34,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Energy: {
     id: "Energy",
-    name: "Energy",
+    name: "Energia",
     label: "Energia & Petróleo",
     color: "#ff9800",
     bgColor: "rgba(255, 152, 0, 0.12)",
@@ -44,7 +44,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Crypto: {
     id: "Crypto",
-    name: "Crypto",
+    name: "Cripto",
     label: "Criptomoedas & Web3",
     color: "#f7931a",
     bgColor: "rgba(247, 147, 26, 0.12)",
@@ -54,7 +54,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Finance: {
     id: "Finance",
-    name: "Finance",
+    name: "Financeiro",
     label: "Financeiro & Bancos",
     color: "#2ea043",
     bgColor: "rgba(46, 160, 67, 0.12)",
@@ -64,7 +64,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Materials: {
     id: "Materials",
-    name: "Materials",
+    name: "Materiais",
     label: "Materiais & Mineração",
     color: "#a371f7",
     bgColor: "rgba(163, 113, 247, 0.12)",
@@ -74,7 +74,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Industry: {
     id: "Industry",
-    name: "Industry",
+    name: "Indústria",
     label: "Indústria & Aeroespacial",
     color: "#79c0ff",
     bgColor: "rgba(121, 192, 255, 0.12)",
@@ -84,7 +84,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Consumer: {
     id: "Consumer",
-    name: "Consumer",
+    name: "Consumo",
     label: "Consumo & Varejo",
     color: "#ec6547",
     bgColor: "rgba(236, 101, 71, 0.12)",
@@ -94,7 +94,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Utilities: {
     id: "Utilities",
-    name: "Utilities",
+    name: "Utilidades",
     label: "Serviços Básicos",
     color: "#3fb950",
     bgColor: "rgba(63, 185, 80, 0.12)",
@@ -114,7 +114,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Forex: {
     id: "Forex",
-    name: "Forex",
+    name: "Câmbio",
     label: "Moedas & Câmbio",
     color: "#56d364",
     bgColor: "rgba(86, 211, 100, 0.12)",
@@ -124,7 +124,7 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
   },
   Indices: {
     id: "Indices",
-    name: "Indices",
+    name: "Índices",
     label: "Índices & Benchmarks",
     color: "#388bfd",
     bgColor: "rgba(56, 139, 253, 0.12)",
@@ -139,13 +139,13 @@ export const SECTOR_DEFINITIONS: Record<string, SectorDefinition> = {
  */
 const TICKER_SECTOR_MAP: Record<string, { sector: AssetSector; tags: string[] }> = {
   // Tech
-  AAPL: { sector: "Tech", tags: ["Hardware", "MegaCap", "AI", "Mobile", "Finnhub"] },
-  NVDA: { sector: "Tech", tags: ["Semiconductors", "AI", "Chips", "MegaCap", "Finnhub"] },
-  MSFT: { sector: "Tech", tags: ["Software", "Cloud", "AI", "MegaCap", "Finnhub"] },
-  AMZN: { sector: "Tech", tags: ["Cloud", "E-Commerce", "AI", "Finnhub"] },
-  GOOGL: { sector: "Tech", tags: ["Search", "Cloud", "AI", "Advertising", "Finnhub"] },
-  TSLA: { sector: "Tech", tags: ["EV", "Automotive", "CleanEnergy", "Autonomous", "Finnhub"] },
-  META: { sector: "Tech", tags: ["SocialMedia", "AI", "Metaverse", "Finnhub"] },
+  AAPL: { sector: "Tech", tags: ["Hardware", "MegaCap", "AI", "Mobile", "Global"] },
+  NVDA: { sector: "Tech", tags: ["Semiconductors", "AI", "Chips", "MegaCap", "Global"] },
+  MSFT: { sector: "Tech", tags: ["Software", "Cloud", "AI", "MegaCap", "Global"] },
+  AMZN: { sector: "Tech", tags: ["Cloud", "E-Commerce", "AI", "Global"] },
+  GOOGL: { sector: "Tech", tags: ["Search", "Cloud", "AI", "Advertising", "Global"] },
+  TSLA: { sector: "Tech", tags: ["EV", "Automotive", "CleanEnergy", "Autonomous", "Global"] },
+  META: { sector: "Tech", tags: ["SocialMedia", "AI", "Metaverse", "Global"] },
   TOTS3: { sector: "Tech", tags: ["ERP", "SaaS", "Software", "B3"] },
   NASDAQ: { sector: "Tech", tags: ["Benchmark", "TechIndex", "WallStreet"] },
   ".IXIC": { sector: "Tech", tags: ["Benchmark", "TechIndex"] },
@@ -162,11 +162,11 @@ const TICKER_SECTOR_MAP: Record<string, { sector: AssetSector; tags: string[] }>
   "SOL/BRL": { sector: "Crypto", tags: ["Solana", "HighSpeed", "DeFi", "24/7"] },
   "XRP/BRL": { sector: "Crypto", tags: ["Ripple", "Payments", "Liquidity", "24/7"] },
   "DOGE/BRL": { sector: "Crypto", tags: ["MemeCoin", "Community", "Payment", "24/7"] },
-  BTC: { sector: "Crypto", tags: ["Bitcoin", "Finnhub", "DigitalGold"] },
-  ETH: { sector: "Crypto", tags: ["Ethereum", "Finnhub", "EVM"] },
-  SOL: { sector: "Crypto", tags: ["Solana", "Finnhub"] },
-  XRP: { sector: "Crypto", tags: ["Ripple", "Finnhub"] },
-  DOGE: { sector: "Crypto", tags: ["Dogecoin", "Finnhub"] },
+  BTC: { sector: "Crypto", tags: ["Bitcoin", "Global", "DigitalGold"] },
+  ETH: { sector: "Crypto", tags: ["Ethereum", "Global", "EVM"] },
+  SOL: { sector: "Crypto", tags: ["Solana", "Global"] },
+  XRP: { sector: "Crypto", tags: ["Ripple", "Global"] },
+  DOGE: { sector: "Crypto", tags: ["Dogecoin", "Global"] },
 
   // Finance
   ITUB4: { sector: "Finance", tags: ["Bancos", "Privado", "Dividendos", "B3"] },
