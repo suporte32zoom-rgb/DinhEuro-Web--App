@@ -19,7 +19,6 @@ interface HeaderProps {
   onOpenSidebar: () => void;
   onOpenPortfolio: () => void;
   onOpenWatchlist: () => void;
-  onOpenCopilot?: () => void;
   onOpenGoogleChat?: () => void;
   onOpenNotifications?: () => void;
   onOpenPwaModal?: () => void;
@@ -43,7 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSidebar,
   onOpenPortfolio,
   onOpenWatchlist,
-  onOpenCopilot,
   onOpenGoogleChat,
   onOpenNotifications,
   onOpenPwaModal,

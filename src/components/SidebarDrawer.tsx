@@ -52,7 +52,6 @@ interface SidebarDrawerProps {
   onSelectTab: (tab: RegionalTab) => void;
   onOpenPortfolio: () => void;
   onOpenWatchlist: () => void;
-  onOpenCopilot?: () => void;
   onOpenGoogleChat?: () => void;
   onOpenNotifications?: () => void;
   onOpenPwaModal?: () => void;
@@ -70,7 +69,6 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onSelectTab,
   onOpenPortfolio,
   onOpenWatchlist,
-  onOpenCopilot,
   onOpenGoogleChat,
   onOpenNotifications,
   onOpenPwaModal,
@@ -196,29 +194,6 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
 
         {/* Action Shortcuts */}
         <div className="p-4 border-b border-[#21262d] space-y-2">
-          {/* DinhEuro AI Copilot Button */}
-          {onOpenCopilot && (
-            <button
-              id="sidebar-btn-copilot"
-              onClick={() => {
-                onClose();
-                onOpenCopilot();
-              }}
-              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-[#8957e5]/20 via-[#1f6feb]/20 to-[#f0883e]/20 hover:from-[#8957e5]/30 hover:to-[#f0883e]/30 border border-purple-500/40 text-xs font-bold text-white transition-all cursor-pointer shadow-xs"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="p-1 rounded-lg bg-gradient-to-br from-[#8957e5] to-[#1f6feb] text-white">
-                  <Sparkles className="w-3.5 h-3.5" />
-                </div>
-                <span>IA Oficial DinhEuro Copilot</span>
-              </div>
-              <span className="px-2 py-0.5 rounded-full bg-[#00c853]/20 text-[#00c853] text-[10px] font-mono">
-                ONLINE
-              </span>
-            </button>
-          )}
-
-
           {/* PWA App Install Button */}
           {onOpenPwaModal && (
             <button

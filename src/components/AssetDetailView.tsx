@@ -515,9 +515,14 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#e6edf3] tracking-tight">
-                  Diagnóstico do Ativo com Inteligência Artificial
-                </h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-bold text-[#e6edf3] tracking-tight">
+                    Diagnóstico do Ativo com Inteligência Artificial
+                  </h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#238636]/20 text-[#00c853] border border-[#238636]/40 font-semibold">
+                    Gemini 3.8 Flash
+                  </span>
+                </div>
                 <p className="text-xs text-[#8b949e]">
                   Síntese automatizada de fundamentos, momentum e posicionamento técnico em tempo real
                 </p>
@@ -535,7 +540,7 @@ export const AssetDetailView: React.FC<AssetDetailViewProps> = ({
           {aiLoading ? (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-2">
               <Loader2 className="w-8 h-8 text-[#58a6ff] animate-spin" />
-              <p className="text-xs text-[#8b949e]">Gerando síntese diagnóstica com Gemini 3.7...</p>
+              <p className="text-xs text-[#8b949e]">Gerando síntese diagnóstica com Gemini 3.8 Flash...</p>
             </div>
           ) : (
             <div className="space-y-4">

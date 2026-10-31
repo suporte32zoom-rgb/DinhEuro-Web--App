@@ -1344,7 +1344,7 @@ Mantenha o tom profissional, direto e sem jargões desnecessários, com 2 a 3 pa
 
     const aiText = await generateContentSafely({
       contents: prompt,
-      preferredModel: "gemini-3.7-flash",
+      preferredModel: "gemini-3.8-flash",
     });
 
     const finalAnalysis =
@@ -1387,7 +1387,7 @@ Estruture a resposta em Markdown limpo com:
 
     const aiText = await generateContentSafely({
       contents: prompt,
-      preferredModel: "gemini-3.7-flash",
+      preferredModel: "gemini-3.8-flash",
     });
 
     const fallbackContent = `### Análise Aprofundada DinhEuro: ${topicTitle || "Dinâmica de Mercado"}\n\n**Resumo Executivo:**\nO segmento de ${region || "Mercados"} apresenta correlações estratégicas ativas com as curvas de juros globais, fluxos cambiais e precificação de risco soberano.\n\n**Mecanismo de Ação no Mercado:**\n- **Câmbio e Juros:** Oscilações de liquidez internacional impactam diretamente as taxas futuras e a paridade de moedas fortes e emergentes.\n- **Ações e Índices:** Rotação setorial perceptível entre papéis cíclicos e defensivos nos pregões recentes.\n\n**Cenário Base vs. Cenário de Risco:**\n- *Cenário Base:* Consolidação em níveis técnicos de suporte com volatilidade contida.\n- *Cenário de Risco:* Picos de aversão ao risco decorrentes de dados de inflação acima do consenso.\n\n**O que observar nos indicadores:**\nMonitore o volume financeiro acumulado, cruzamento de médias móveis de 20/50 dias e os spreads de crédito corporativo.`;
@@ -1434,7 +1434,7 @@ Forneça um JSON com a seguinte estrutura:
       config: {
         responseMimeType: "application/json",
       },
-      preferredModel: "gemini-3.7-flash",
+      preferredModel: "gemini-3.8-flash",
     });
 
     let jsonOutput = null;
@@ -1478,65 +1478,6 @@ Forneça um JSON com a seguinte estrutura:
       strengths: ["Liquidez ativa"],
       risks: ["Volatilidade macroeconômica"],
       technicalInsight: "Consulte o gráfico interativo para detalhes de suporte e resistência.",
-    });
-  }
-});
-
-// Interactive AI Chat / Copilot for DinhEuro
-app.post("/api/market-ai/chat", async (req, res) => {
-  try {
-    const { message, history } = req.body;
-    const formattedHistory = Array.isArray(history)
-      ? history
-          .slice(-6)
-          .map((h: any) => `${h.role === "user" ? "Usuário" : "DinhEuro AI"}: ${h.content}`)
-          .join("\n")
-      : "";
-
-    const prompt = `Você é a inteligência artificial oficial do DinhEuro.com, especialista global em finanças, economia e mercado financeiro.
-Sua missão é responder com máxima precisão, clareza e autoridade a qualquer dúvida ou cálculo sobre finanças pessoais, mercado nacional e internacional.
-
-Suas Especialidades Fundamentais:
-1. Especialista Máxima em Corredores Financeiros:
-   - Domínio absoluto do corredor União Europeia ⇄ Mercosul (EUR ⇄ BRL, EUR ⇄ ARS, etc.).
-   - Domínio de todos os corredores de remessas e transferências com países parceiros do Brasil (EUA, Reino Unido, Japão, Suíça, etc.).
-2. Mercado Global e Nacional:
-   - Cobertura completa sobre cotações, taxa de câmbio, spread, impostos (IOF), tarifas bancárias, SEPA, PIX internacional e transferências internacionais.
-   - Conhecimento aprofundado sobre o mercado financeiro brasileiro (B3, CDI, Selic, Tesouro Direto, FIIs) e internacional (Wall Street, S&P 500, Nasdaq, BCE, Fed).
-3. Capacidade Técnica:
-   - Realizar cálculos financeiros complexos, simulações de conversão de moedas e comparações de custos de remessa (Wise, Remessa Online, bancos tradicionais, cripto).
-   - Responder prontamente a 100% das perguntas sobre dinheiro, investimentos, inflação e regulamentação financeira.
-
-Diretrizes de Resposta:
-- Mantenha um tom profissional, seguro, direto e prestativo.
-- Use formatação clara em Markdown (negrito, listas, tabelas quando apropriado).
-
-Histórico recente:
-${formattedHistory}
-
-Mensagem do usuário: "${message || "Olá"}"`;
-
-    const aiText = await generateContentSafely({
-      contents: prompt,
-      preferredModel: "gemini-3.7-flash",
-    });
-
-    const fallbackReply = `Sou o **DinhEuro AI Copilot**! Em relação à sua consulta sobre **"${message || "mercados"}"**:
-- **Cenário Atual:** Os mercados globais e o mercado brasileiro (Ibovespa) operam com foco nas decisões de política monetária (BCE, Fed e Copom) e no fluxo de capital estrangeiro.
-- **Dica Prática:** Você pode consultar cotações em tempo real, gráficos interativos de 1D a 5A, métricas de Valuation e notícias atualizadas diretamente nas abas do portal DinhEuro.
-
-Como posso ajudar você a analisar um ativo específico (ações, FIIs, moedas, índices ou criptos) hoje?`;
-
-    res.json({
-      success: true,
-      reply: aiText || fallbackReply,
-    });
-  } catch (error: any) {
-    console.error("Error in AI chat endpoint:", error);
-    res.json({
-      success: true,
-      reply:
-        "O DinhEuro AI Copilot está pronto para ajudar! Você pode explorar cotações, gráficos interativos e notícias em tempo real nas abas de Ações, Câmbio, Cripto e Commodities.",
     });
   }
 });
