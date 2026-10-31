@@ -36,7 +36,7 @@ const CURRENCY_INFO: Record<
   { label: string; symbol: string; prefix: string; icon: string }
 > = {
   BRL: { label: "Real (BRL)", symbol: "R$", prefix: "R$", icon: "🇧🇷" },
-  USD: { label: "Dólar (USD)", symbol: "$", prefix: "US$", icon: "🇺🇸" },
+  USD: { label: "Dólar (USD)", symbol: "US$", prefix: "US$", icon: "🇺🇸" },
   EUR: { label: "Euro (EUR)", symbol: "€", prefix: "€", icon: "🇪🇺" },
   GBP: { label: "Libra (GBP)", symbol: "£", prefix: "£", icon: "🇬🇧" },
   JPY: { label: "Iene (JPY)", symbol: "¥", prefix: "¥", icon: "🇯🇵" },

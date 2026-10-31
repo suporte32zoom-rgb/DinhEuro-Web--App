@@ -1541,6 +1541,16 @@ Como posso ajudar você a analisar um ativo específico (ações, FIIs, moedas, 
   }
 });
 
+// Google AdSense ads.txt verification endpoint
+app.get("/ads.txt", (_req, res) => {
+  const adsTxtPath = path.join(process.cwd(), "public", "ads.txt");
+  if (fs.existsSync(adsTxtPath)) {
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    return res.sendFile(adsTxtPath);
+  }
+  res.type("text/plain").send("google.com, pub-7845011898892939, DIRECT, f08c47fec0942fa0\n");
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
