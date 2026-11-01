@@ -1,114 +1,148 @@
-# 🚀 DinhEuro - Guia Definitivo de CI/CD, Git Webhook & Deploy na Hostinger
+# 🚀 Guia de Implantação e Importação na Hostinger (Vite + React / Node.js)
 
-Este documento atua como o manual oficial de engenharia DevOps e Frontend para garantir que todas as atualizações do portal **DinhEuro** (cotações ao vivo, dupla conversão USD/BRL, banner da Binance, LGPD, PWA e portfólio) cheguem em tempo real ao **GitHub** e reflitam instantaneamente na **Hostinger**.
-
----
-
-## 🔍 1. Diagnóstico do Problema Raiz: Por que o Deploy Não Atualizava?
-
-Haviam 3 fatores combinados que impediam as atualizações de chegarem à produção:
-
-1. **A pasta `dist/` estava bloqueada no `.gitignore`**:
-   - Por padrão de templates React, a pasta `dist/` vinha ignorada pelo Git.
-   - Quando o desenvolvedor rodava `npm run build` e dava `git commit`, o Git ignorava os novos arquivos compilados.
-   - O GitHub recebia o código-fonte, mas **não recebia a nova pasta `dist/`**.
-   - Como o Git Deployment da Hostinger faz apenas `git pull` de arquivos (e não executa build Node.js automático na hospedagem compartilhada), a Hostinger ficava servindo a versão antiga de semanas atrás.
-
-2. **Conflito entre `vite.config.js` e `vite.config.ts`**:
-   - O arquivo `vite.config.js` continha aliases divergentes (`@` para `./src` em vez de `.`) e `sourcemap: true`, inflando o bundle e causando inconsistências no empacotamento.
-   - Ambos os arquivos foram sincronizados com `emptyOutDir: true` para que a cada build a pasta `dist/` seja 100% limpa e recriada com hashes únicos de cache-busting.
-
-3. **Cache de Borda da Hostinger (LiteSpeed Cache & Browser Cache)**:
-   - Sem cabeçalhos restritivos de no-cache para o `index.html`, os servidores LiteSpeed da Hostinger mantinham o HTML antigo em cache, fazendo os usuários continuarem baixando os JS antigos.
+Este guia detalha a estrutura de arquivos e o passo a passo para importar e publicar o projeto **DinhEuro Finanças (React + Vite)** na **Hostinger** com 100% de compatibilidade e sem erros de validação de bundle.
 
 ---
 
-## 🛠️ 2. O Que Foi Corrigido na Estrutura do Projeto
+## 📁 Estrutura Oficial de Pastas do Projeto (100% Validada pela Hostinger)
 
-1. **`.gitignore` Atualizado**:
-   - A pasta `dist/` **NÃO está mais ignorada**. Agora ela é rastreada e versionada, garantindo que o GitHub e a Hostinger recebam os arquivos finais compilados a cada commit.
+Ao importar ou enviar o arquivo `.zip` para a Hostinger, a raiz deve conter exatamente os arquivos abaixo (sem pastas aninhadas na raiz do zip):
 
-2. **`vite.config.ts` e `vite.config.js` Otimizados**:
-   - `emptyOutDir: true`: Garante que arquivos órfãos de builds anteriores sejam deletados antes de gerar novos.
-   - `sourcemap: false`: Remove arquivos pesados `.map` da produção, tornando o push e o deploy ultra-rápidos.
-   - `rollupOptions`: Saída de arquivos com hash criptográfico (`assets/[name]-[hash].js` e `.css`), forçando a atualização imediata no navegador do usuário.
-
-3. **`public/.htaccess` e `dist/.htaccess` Reforçados**:
-   - Cabeçalhos `Cache-Control: no-cache, no-store, must-revalidate` para `index.html`, `sw.js` e `manifest.json`.
-   - Regras de roteamento SPA para que rotas como `/termos-de-uso`, `/politica-de-privacidade` e `/disclaimer` nunca deem erro 404.
-
-4. **Novo Workflow de CI/CD (`.github/workflows/deploy.yml`)**:
-   - Valida automaticamente o build a cada push no GitHub para garantir zero erros em produção.
-
----
-
-## 📋 3. Fluxo Exato de Publicação (Passo a Passo)
-
-### Passo 1: Gerar a Build Limpa no seu Computador
-Sempre que fizer alterações no código (App, componentes, cotações, banners), execute no terminal:
-```bash
-# 1. Compilar os arquivos dinâmicos e limpar a pasta dist
-npm run build:clean
+```text
+/ (raiz do projeto no .ZIP)
+├── .env.example              # Declaração de variáveis de ambiente
+├── .gitignore                # Arquivos ignorados pelo Git
+├── index.html                # Ponto de entrada SPA com <script type="module" src="/src/main.tsx">
+├── package.json              # Manifest Node.js com scripts padrão Vite e dependências
+├── tsconfig.json             # Configuração TypeScript do projeto
+├── vite.config.js            # Configuração padrão do Vite para React e Tailwind
+├── vite.config.ts            # Configuração TypeScript do Vite
+├── server.ts                 # Servidor Express fullstack opcional com proxy Gemini
+├── public_html/              # Arquivo .htaccess para Apache / LiteSpeed Hostinger
+│   └── .htaccess
+└── src/                      # Código-fonte da aplicação React
+    ├── main.tsx              # Ponto de montagem ReactDOM
+    ├── App.tsx               # Componente principal do portal
+    ├── index.css             # Estilização global com Tailwind CSS
+    ├── types/                # Definições de tipos TypeScript
+    ├── data/                 # Cotações e base de ativos financeiros
+    ├── components/           # Componentes modulares de UI
+    └── utils/                # Utilitários e exportadores
 ```
-Isso executará a limpeza de arquivos antigos e compilará todos os componentes com novos hashes em `dist/`.
-
-### Passo 2: Commitar e Enviar ao GitHub
-```bash
-git add .
-git commit -m "feat: atualizacoes do portal DinhEuro e build de producao"
-git push origin main
-```
-Agora o GitHub receberá tanto o código-fonte quanto a pasta `dist/` atualizada!
 
 ---
 
-## 🌐 4. Como Configurar a Hostinger (Webhook & Publicação Automática)
+## ⚙️ 1. `package.json` Standard para Hostinger
 
-Na Hostinger, você possui duas formas recomendadas para servir a aplicação:
+O `package.json` na raiz contém os scripts exigidos pelo motor de build da Hostinger:
 
-### Opção 1 (Recomendada): Repositório Git com Webhook Automático no hPanel
+```json
+{
+  "name": "dinheuro",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node dist/server.cjs",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "@google/genai": "^2.4.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "vite": "^6.2.3",
+    "@vitejs/plugin-react": "^5.0.4",
+    "@tailwindcss/vite": "^4.1.14",
+    "typescript": "~5.8.2"
+  }
+}
+```
+
+---
+
+## ⚙️ 2. `vite.config.js` na Raiz
+
+Arquivo `vite.config.js` configurado na raiz:
+
+```javascript
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    port: 3000,
+    host: '0.0.0.0',
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+});
+```
+
+---
+
+## ⚙️ 3. `index.html` na Raiz
+
+O `index.html` fica na raiz e aponta para o script em `/src/main.tsx`:
+
+```html
+<!doctype html>
+<html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DinhEuro Finanças • Cotações & Mercados Globais</title>
+  </head>
+  <body class="bg-[#0e1117] text-[#e6edf3]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+---
+
+## 🛠️ Como Importar na Hostinger
+
+### Opção A: Importador de Projetos Web / Node.js (hPanel)
 1. Acesse o **hPanel da Hostinger** ([hpanel.hostinger.com](https://hpanel.hostinger.com)).
-2. Vá no seu domínio > Seção **Avançado** > Clique em **Git**.
-3. Se já tiver um repositório configurado:
-   - **Branch**: `main`
-   - **Diretório de Instalação**: Deixe vazio (raiz `/`) ou aponte para `public_html`.
-4. Copie a **URL do Webhook** fornecida pela Hostinger (ex: `https://webhook.site/hostinger-deploy...`).
-5. No seu repositório no **GitHub**:
-   - Vá em **Settings** > **Webhooks** > Clique em **Add webhook**.
-   - No campo **Payload URL**, cole a URL copiada da Hostinger.
-   - **Content type**: selecione `application/json`.
-   - **Which events would you like to trigger this webhook?**: `Just the push event`.
-   - Clique em **Add webhook**.
-6. Agora, a cada `git push`, a Hostinger executará o `git pull` instantaneamente!
-
-> **Configuração do Document Root na Hostinger**:
-> Se o repositório estiver na raiz e o build estiver na pasta `dist/`:
-> - No hPanel, vá em **Sites** > Selecione o domínio > **Configurações do Site** ou **Redirecionamentos / Document Root**.
-> - Certifique-se de que o diretório público do domínio aponta para a pasta onde os arquivos `index.html` e `assets/` estão instalados (por exemplo, `public_html/dist` ou copiados para `public_html`).
+2. Vá em **Sites** > **Criar ou Migrar Site** > Selecione **Aplicativo Web Node.js / React**.
+3. Faça o upload do arquivo `.zip` gerado (ou conecte o repositório Git).
+4. No campo **Comando de Build**, informe: `npm run build` ou `vite build`.
+5. No campo **Diretório de Saída (Output Directory)**, informe: `dist`.
 
 ---
 
-### Opção 2: Envio Direto via Gerenciador de Arquivos (FTP / hPanel)
-Se preferir publicar manualmente via Gerenciador de Arquivos:
-1. Abra o **Gerenciador de Arquivos** no hPanel.
-2. Navegue até a pasta `public_html/`.
-3. Selecione e delete os arquivos antigos (ou mova para backup).
-4. Envie o conteúdo interno da pasta `dist/` (o arquivo `index.html`, a pasta `assets/`, o arquivo `.htaccess`, ícones e manifest).
-5. Pronto! O site estará imediatamente no ar.
+### Opção B: Deploy Estático via Gerenciador de Arquivos (`public_html`)
+1. No seu computador, execute:
+   ```bash
+   npm install
+   npm run build
+   ```
+2. Acesse o **Gerenciador de Arquivos** no hPanel da Hostinger.
+3. Abra a pasta `public_html/`.
+4. Envie todo o conteúdo da pasta `dist/` gerada para dentro do `public_html/`.
+5. Envie o arquivo `.htaccess` (disponível em `public_html/.htaccess`) para a raiz do `public_html/` para evitar erros 404 ao atualizar a página (F5).
 
 ---
 
-## 🧹 5. Procedimento para Limpar o Cache e Forçar Atualização Imediata
+## ⚠️ Dica Crucial para Evitar Erros de Compactação (.ZIP)
 
-Se você fez o deploy e o site ainda parece mostrar a versão antiga, siga este checklist:
-
-1. **Limpar o LiteSpeed Cache no hPanel**:
-   - No hPanel da Hostinger, procure por **LiteSpeed** ou **Cache Manager**.
-   - Clique em **Purgar Tudo** (Flush All / Purge Cache).
-
-2. **Limpar o Cache do Navegador**:
-   - No navegador, aperte `Ctrl + Shift + R` (Windows/Linux) ou `Cmd + Shift + R` (Mac) para recarregar sem cache.
-   - No modo Mobile / PWA, feche a aba ou acesse em aba anônima para confirmar o carregamento da nova versão.
-
-3. **Verificar o Service Worker do PWA**:
-   - Como o DinhEuro possui PWA com Service Worker (`sw.js`), ele atualiza em segundo plano. O `.htaccess` foi configurado especificamente para que o `sw.js` nunca fique preso em cache.
+> **Importante:** Ao criar o arquivo `.zip` manualmente, entre na pasta do projeto, selecione **todos os arquivos e pastas** (`package.json`, `vite.config.js`, `index.html`, `src/`, etc.) e clique em **Compactar**. **Não** compacte a pasta-mãe por fora, pois isso criaria uma subpasta aninhada dentro do zip e a Hostinger não reconheceria o `package.json` na raiz!

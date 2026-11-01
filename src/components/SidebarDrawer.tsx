@@ -51,7 +51,6 @@ interface SidebarDrawerProps {
   activeTab: RegionalTab;
   onSelectTab: (tab: RegionalTab) => void;
   onOpenPortfolio: () => void;
-  portfolioCount?: number;
   onOpenWatchlist: () => void;
   onOpenGoogleChat?: () => void;
   onOpenNotifications?: () => void;
@@ -69,7 +68,6 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   activeTab,
   onSelectTab,
   onOpenPortfolio,
-  portfolioCount = 0,
   onOpenWatchlist,
   onOpenGoogleChat,
   onOpenNotifications,
@@ -262,15 +260,13 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               onClose();
               onOpenPortfolio();
             }}
-            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-[#1f6feb]/20 to-[#238636]/20 hover:from-[#1f6feb]/30 hover:to-[#238636]/30 border border-[#1f6feb]/40 text-xs font-semibold text-[#e6edf3] transition-all cursor-pointer shadow-xs"
+            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-[#1f6feb]/20 to-[#238636]/20 hover:from-[#1f6feb]/30 hover:to-[#238636]/30 border border-[#1f6feb]/40 text-xs font-semibold text-[#e6edf3] transition-all cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <Briefcase className="w-4 h-4 text-[#58a6ff]" />
               <span>Criar / Gerenciar Portfólio</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-[#1f6feb]/25 text-[#58a6ff] text-[10px] font-mono font-bold">
-              {portfolioCount > 0 ? `${portfolioCount} ${portfolioCount === 1 ? 'ativo' : 'ativos'}` : 'ABRIR'}
-            </span>
+            <span className="text-[10px] text-[#58a6ff]">Novo</span>
           </button>
         </div>
 

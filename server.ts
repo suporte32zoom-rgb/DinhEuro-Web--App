@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -9,6 +10,7 @@ import { quotesService, ASSET_REGISTRY, LiveQuote } from "./src/services/quotesS
 
 dotenv.config();
 
+const __filename = typeof import.meta !== "undefined" && (import.meta as any).url ? fileURLToPath((import.meta as any).url) : "";
 const __dirname = path.resolve();
 
 const app = express();

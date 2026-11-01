@@ -40,7 +40,6 @@ import { InstitutionalModal } from "./components/InstitutionalModal";
 import { LGPDConsentBanner } from "./components/LGPDConsentBanner";
 import { LegalDocId } from "./types/legal";
 import { Footer } from "./components/Footer";
-import { BinanceBanner } from "./components/BinanceBanner";
 import { usePWA } from "./hooks/usePWA";
 
 export default function App() {
@@ -671,7 +670,6 @@ export default function App() {
           if (selectedAsset) setSelectedAsset(null);
         }}
         onOpenPortfolio={() => setPortfolioOpen(true)}
-        portfolioCount={portfolioPositions.length}
         onOpenWatchlist={() => setWatchlistOpen(true)}
         onOpenGoogleChat={() => {
           setChatShareText("");
@@ -758,11 +756,6 @@ export default function App() {
         isInstallable={isInstallable}
         isInstalled={isInstalled}
       />
-
-      {/* Binance Official Partner Banner */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full my-4">
-        <BinanceBanner />
-      </div>
 
       {/* Global Footer with Legal & Compliance Navigation */}
       <Footer onOpenLegalDoc={handleOpenLegalDoc} />
