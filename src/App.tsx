@@ -20,6 +20,7 @@ import { NavigationTabs } from "./components/NavigationTabs";
 import { SectorFilterBar } from "./components/SectorFilterBar";
 import { DynamicIndicesCarousel } from "./components/DynamicIndicesCarousel";
 import { GlobalEconomyWidget } from "./components/GlobalEconomyWidget";
+import { EconomicCalendarWidget } from "./components/EconomicCalendarWidget";
 import { DEFAULT_UNIFIED_CURRENCIES, economyItemToAsset } from "./services/unifiedCurrencyService";
 import { AIMarketSummaryAccordion } from "./components/AIMarketSummaryAccordion";
 import { MarketMoversGrid } from "./components/MarketMoversGrid";
@@ -638,6 +639,15 @@ export default function App() {
                 liveAssets={liveAssets}
               />
             </div>
+
+            {/* Calendário Econômico & Decisões de Juros (Copom, Fed, BCE, IPCA, Payroll) */}
+            <EconomicCalendarWidget
+              onSelectTicker={handleSelectTicker}
+              onOpenNotifications={() => {
+                setAlertTargetAsset(null);
+                setNotificationsOpen(true);
+              }}
+            />
 
             {/* AI Market Summary Accordion */}
             <AIMarketSummaryAccordion
