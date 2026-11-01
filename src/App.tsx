@@ -762,3 +762,32 @@ export default function App() {
     </div>
   );
 }
+import React from 'react';
+import { BinanceBanner } from './components/BinanceBanner'; // Importa o banner
+// ... (seus outros imports de rotas, navbar, etc)
+
+export function App() {
+  return (
+    <div className="dinheuro-app-container">
+      {/* Cabeçalho / Navbar do site (aparece em todas as páginas) */}
+      <header>...</header>
+
+      {/* Conteúdo dinâmico das páginas */}
+      <main>
+        {/* Suas rotas ou componentes de páginas entram aqui */}
+      </main>
+
+      {/* 
+        COLOCANDO AQUI: 
+        Como o rodapé ou área comum fica fora das rotas específicas, 
+        esse banner vai aparecer automaticamente em TODAS as páginas do site! 
+      */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+        <BinanceBanner />
+      </div>
+
+      {/* Rodapé do site (aparece em todas as páginas) */}
+      <footer>...</footer>
+    </div>
+  );
+}
