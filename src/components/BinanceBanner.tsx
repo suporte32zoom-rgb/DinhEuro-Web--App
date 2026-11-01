@@ -39,7 +39,7 @@ export const BinanceBanner: React.FC<BinanceBannerProps> = ({
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        justifySpaceBetween: 'space-between',
+        justifyContent: 'space-between',
         gap: '20px',
         position: 'relative',
         zIndex: 2
