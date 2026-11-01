@@ -9,7 +9,6 @@ import {
 } from "../types/finance";
 import { ALL_ASSETS } from "../data/mockMarketData";
 import { fetchLiveChart } from "../services/marketDataService";
-import { formatAssetDisplayPrice } from "../utils/formatters";
 import {
   TrendingUp,
   TrendingDown,
@@ -451,7 +450,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
   };
 
   const formatPrice = (val: number, customCurrency?: string) => {
-    return formatAssetDisplayPrice(val, customCurrency || currency);
+    const c = customCurrency || currency;
+    const symbol = c === "BRL" ? "R$ " : c === "USD" ? "US$ " : c === "EUR" ? "€ " : "";
+    return val >= 1000
+      ? `${symbol}${val.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `${symbol}${val.toFixed(2)}`;
   };
 
   // Hovered or active end point calculation
@@ -514,7 +517,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                   </span>
                 </div>
 
-                <span className="text-xs font-bold text-[#8b949e]">vs.</span>
+                <span className="text-xs font-bold text-[#8b949e]">VS</span>
 
                 {/* Compare Asset Pill */}
                 <div className="flex items-baseline gap-2 bg-[#0e1117] px-3 py-1.5 rounded-xl border border-[#f0883e]/40 shadow-xs">
@@ -595,7 +598,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                   <span>• Vol: {(activePrimaryPoint.volume / 1000).toFixed(0)}k</span>
                 )}
                 <span className="px-1.5 py-0.5 rounded bg-[#0e1117] text-[10px] text-[#58a6ff] border border-[#30363d]">
-                  Motor Gráfico D3 v7
+                  D3 Engine v7
                 </span>
                 {(isLoadingChart || isLoadingCompare) && (
                   <span className="text-[#58a6ff] flex items-center gap-1 font-sans">
@@ -637,7 +640,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 displayType === "area" ? "bg-[#21262d] text-[#58a6ff]" : "text-[#8b949e] hover:text-[#e6edf3]"
               }`}
             >
-              Área
+              Área D3
             </button>
             <button
               onClick={() => setDisplayType("line")}

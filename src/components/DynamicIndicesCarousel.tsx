@@ -25,7 +25,6 @@ import {
   filterAssetsBySectorAndTag,
   SECTOR_DEFINITIONS,
 } from "../utils/assetTaxonomy";
-import { formatAssetDisplayPrice } from "../utils/formatters";
 
 interface DynamicIndicesCarouselProps {
   assets: Asset[];
@@ -91,7 +90,29 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
   };
 
   const formatPrice = (price: number, currency: string) => {
-    return formatAssetDisplayPrice(price, currency);
+    if (currency === "BRL") {
+      return price >= 1000
+        ? `R$ ${price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : `R$ ${price.toFixed(2)}`;
+    }
+    if (currency === "USD") {
+      return price >= 1000
+        ? `US$ ${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : `US$ ${price.toFixed(2)}`;
+    }
+    if (currency === "EUR") {
+      return `€ ${price.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (currency === "GBP") {
+      return `£ ${price.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (currency === "JPY") {
+      return `¥ ${price.toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+    }
+    if (currency === "INR") {
+      return `₹ ${price.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+    }
+    return `${price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   };
 
   // Helper to render a single asset card
@@ -135,9 +156,9 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
                   color: secDef?.color || "#58a6ff",
                   border: `1px solid ${secDef?.borderColor || "rgba(88, 166, 255, 0.3)"}`,
                 }}
-                title={`Setor: ${secDef?.name || sector}`}
+                title={`Setor: ${sector}`}
               >
-                {secDef?.name || sector}
+                {sector}
               </span>
 
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0e1117] text-[#8b949e] border border-[#30363d] font-medium">
@@ -227,7 +248,7 @@ export const DynamicIndicesCarousel: React.FC<DynamicIndicesCarouselProps> = ({
             </h2>
             {selectedSector !== "all" && (
               <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[#1f6feb]/20 text-[#58a6ff] border border-[#58a6ff]/40">
-                Setor: {SECTOR_DEFINITIONS[selectedSector]?.name || selectedSector}
+                Setor: {selectedSector}
               </span>
             )}
             {activeTag && (

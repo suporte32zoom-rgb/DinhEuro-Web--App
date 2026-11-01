@@ -50,8 +50,8 @@ export const fetchEconomyData = async (
 
     const data = await response.json();
     return data as AwesomeEconomyResponse;
-  } catch (error: any) {
-    console.warn("Falha no serviço de economia geral:", error?.message || error);
+  } catch (error) {
+    console.error("Erro no serviço de economia geral:", error);
     return null;
   }
 };

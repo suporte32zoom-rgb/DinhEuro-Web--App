@@ -2,7 +2,6 @@ import React from "react";
 import { TOP_MOVERS_DATA } from "../data/mockMarketData";
 import { MarketMoverItem } from "../types/finance";
 import { TrendingUp, TrendingDown, Activity, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { formatAssetDisplayPrice } from "../utils/formatters";
 
 interface MarketMoversGridProps {
   onSelectTicker: (ticker: string) => void;
@@ -95,7 +94,7 @@ export const MarketMoversGrid: React.FC<MarketMoversGridProps> = ({
 
                   <div className="text-right shrink-0">
                     <div className="text-xs font-mono font-semibold text-[#e6edf3]">
-                      {formatAssetDisplayPrice(item.price, item.currency || "BRL")}
+                      R$ {item.price.toFixed(2)}
                     </div>
                     <div
                       className={`text-[11px] font-mono font-bold flex items-center justify-end gap-0.5 ${

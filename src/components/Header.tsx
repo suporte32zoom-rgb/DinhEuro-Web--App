@@ -19,6 +19,7 @@ interface HeaderProps {
   onOpenSidebar: () => void;
   onOpenPortfolio: () => void;
   onOpenWatchlist: () => void;
+  onOpenCopilot?: () => void;
   onOpenGoogleChat?: () => void;
   onOpenNotifications?: () => void;
   onOpenPwaModal?: () => void;
@@ -42,6 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSidebar,
   onOpenPortfolio,
   onOpenWatchlist,
+  onOpenCopilot,
   onOpenGoogleChat,
   onOpenNotifications,
   onOpenPwaModal,
@@ -142,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <span className="text-[#8b949e] font-semibold text-[11px]">USD/BRL</span>
               <span className="text-[#e6edf3] font-mono text-[11px]">
-                R$ {usdBrl ? usdBrl.price.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : "5,1866"}
+                R$ {usdBrl ? usdBrl.price.toFixed(4) : "5,1866"}
               </span>
               <span
                 className={`font-mono text-[11px] font-semibold ${
@@ -162,7 +164,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <span className="text-[#8b949e] font-semibold text-[11px]">BTC</span>
               <span className="text-[#e6edf3] font-mono text-[11px]">
-                US$ {btc ? btc.price.toLocaleString("en-US", { maximumFractionDigits: 0 }) : "83,430"}
+                US$ {btc ? btc.price.toLocaleString("en-US", { maximumFractionDigits: 0 }) : "83.430"}
               </span>
               <span
                 className={`font-mono text-[11px] font-semibold ${
@@ -182,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <span className="text-[#8b949e] font-semibold text-[11px]">PETR4</span>
               <span className="text-[#e6edf3] font-mono text-[11px]">
-                R$ {petr ? petr.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "47,99"}
+                R$ {petr ? petr.price.toFixed(2) : "47,99"}
               </span>
               <span
                 className={`font-mono text-[11px] font-semibold ${

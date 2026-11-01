@@ -33,6 +33,7 @@ import { AIDeepDiveModal } from "./components/AIDeepDiveModal";
 import { PWAInstallModal } from "./components/PWAInstallModal";
 import { PWANotificationBar } from "./components/PWANotificationBar";
 import { PWASplashIntro } from "./components/PWASplashIntro";
+import { DinhEuroAICopilot } from "./components/DinhEuroAICopilot";
 import { GoogleChatModal } from "./components/GoogleChatModal";
 import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
 import { notificationService, NotificationSettings } from "./services/notificationService";
@@ -102,6 +103,7 @@ export default function App() {
   const [portfolioOpen, setPortfolioOpen] = useState(false);
   const [watchlistOpen, setWatchlistOpen] = useState(false);
   const [pwaModalOpen, setPwaModalOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const [googleChatOpen, setGoogleChatOpen] = useState(false);
   const [chatShareText, setChatShareText] = useState("");
   const [deepDiveTopic, setDeepDiveTopic] = useState<AIAccordionTopic | null>(null);
@@ -198,7 +200,6 @@ export default function App() {
             price: quote.price,
             change: quote.change,
             changePercent: quote.changePercent,
-            currency: quote.currency || asset.currency,
             sparkline:
               quote.sparkline && quote.sparkline.length > 0
                 ? quote.sparkline
@@ -234,7 +235,6 @@ export default function App() {
           price: quote.price,
           change: quote.change,
           changePercent: quote.changePercent,
-          currency: quote.currency || cur.currency,
           sparkline:
             quote.sparkline && quote.sparkline.length > 0
               ? quote.sparkline
@@ -546,6 +546,7 @@ export default function App() {
         onOpenSidebar={() => setSidebarOpen(true)}
         onOpenPortfolio={() => setPortfolioOpen(true)}
         onOpenWatchlist={() => setWatchlistOpen(true)}
+        onOpenCopilot={() => setCopilotOpen(true)}
         onOpenGoogleChat={() => {
           setChatShareText("");
           setGoogleChatOpen(true);
@@ -671,6 +672,7 @@ export default function App() {
         }}
         onOpenPortfolio={() => setPortfolioOpen(true)}
         onOpenWatchlist={() => setWatchlistOpen(true)}
+        onOpenCopilot={() => setCopilotOpen(true)}
         onOpenGoogleChat={() => {
           setChatShareText("");
           setGoogleChatOpen(true);
@@ -715,6 +717,12 @@ export default function App() {
       <AIDeepDiveModal
         topic={deepDiveTopic}
         onClose={() => setDeepDiveTopic(null)}
+      />
+
+      {/* DinhEuro Official AI Copilot Modal */}
+      <DinhEuroAICopilot
+        isOpen={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
       />
 
       {/* Google Chat Workspace Integration Modal */}

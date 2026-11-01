@@ -51,20 +51,20 @@ const SECTOR_ICON_MAP: Record<string, React.ReactNode> = {
   Indices: <TrendingUp className="w-3.5 h-3.5" />,
 };
 
-// Tags populares traduzidas para filtro rápido
+// Popular curated tags for quick 1-click filtering
 const POPULAR_TAGS = [
-  "Inteligência Artificial",
-  "Mega Capitalização",
-  "Global",
+  "AI",
+  "MegaCap",
+  "Finnhub",
   "Dividendos",
   "B3",
-  "Semicondutores",
-  "Nuvem",
+  "Semiconductors",
+  "Cloud",
   "Petróleo",
   "Mineração",
   "Bitcoin",
   "Câmbio",
-  "Benchmarks",
+  "Benchmark",
 ];
 
 export const SectorFilterBar: React.FC<SectorFilterBarProps> = ({
