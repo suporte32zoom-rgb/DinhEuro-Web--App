@@ -62,14 +62,22 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
     };
   });
 
-  const totalPortfolioValue = enrichedPositions.reduce(
-    (acc, p) => acc + p.currentValue,
-    0
-  );
-  const totalPortfolioCost = enrichedPositions.reduce(
-    (acc, p) => acc + p.totalCost,
-    0
-  );
+  // Taxas de câmbio para consolidação patrimonial em Reais (BRL)
+  const usdBrlRate = liveAssets.find((a) => a.id === "usd-brl")?.price || 5.41;
+  const eurBrlRate = liveAssets.find((a) => a.id === "eur-brl")?.price || 6.03;
+
+  const totalPortfolioValue = enrichedPositions.reduce((acc, p) => {
+    const curr = (p.liveAsset?.currency || "BRL").toUpperCase();
+    const rate = curr === "USD" ? usdBrlRate : curr === "EUR" ? eurBrlRate : 1.0;
+    return acc + p.currentValue * rate;
+  }, 0);
+
+  const totalPortfolioCost = enrichedPositions.reduce((acc, p) => {
+    const curr = (p.liveAsset?.currency || "BRL").toUpperCase();
+    const rate = curr === "USD" ? usdBrlRate : curr === "EUR" ? eurBrlRate : 1.0;
+    return acc + p.totalCost * rate;
+  }, 0);
+
   const totalPL = totalPortfolioValue - totalPortfolioCost;
   const totalPLPct = totalPortfolioCost > 0 ? (totalPL / totalPortfolioCost) * 100 : 0;
 
@@ -98,6 +106,16 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
     setShowAddForm(false);
     setQuantity("100");
   };
+
+  const selectedAsset = liveAssets.find((a) => a.id === selectedAssetId);
+  const selectedCurrencySymbol =
+    selectedAsset?.currency === "USD"
+      ? "US$"
+      : selectedAsset?.currency === "EUR"
+      ? "€"
+      : selectedAsset?.currency === "GBP"
+      ? "£"
+      : "R$";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
@@ -134,7 +152,7 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
         {/* Portfolio Summary KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-[#0e1117] border-b border-[#21262d]">
           <div className="p-3 rounded-xl bg-[#161b22] border border-[#30363d]">
-            <span className="text-[11px] text-[#8b949e] font-medium">Patrimônio Atual</span>
+            <span className="text-[11px] text-[#8b949e] font-medium">Patrimônio Consolidado</span>
             <div className="text-xl font-bold font-mono text-white mt-1">
               {formatCurrencyBRL(totalPortfolioValue)}
             </div>
@@ -221,7 +239,9 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#8b949e] mb-1">Preço Médio de Compra (R$)</label>
+                <label className="block text-[11px] text-[#8b949e] mb-1">
+                  Preço Médio de Compra ({selectedCurrencySymbol})
+                </label>
                 <input
                   type="number"
                   step="any"
@@ -279,6 +299,7 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
           ) : (
             enrichedPositions.map((pos) => {
               const isProfit = pos.profitLoss >= 0;
+              const posCurrency = pos.liveAsset?.currency || "BRL";
               return (
                 <div
                   key={pos.id}
@@ -303,22 +324,22 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
                     </div>
                     <div className="text-xs text-[#8b949e] mt-1 flex items-center gap-3">
                       <span>Qtd: <strong className="text-[#e6edf3] font-mono">{pos.quantity}</strong></span>
-                      <span>PM: <strong className="text-[#e6edf3] font-mono">{formatCurrencyBRL(pos.avgBuyPrice)}</strong></span>
-                      <span>Atual: <strong className="text-[#e6edf3] font-mono">{formatCurrencyBRL(pos.currentPrice)}</strong></span>
+                      <span>PM: <strong className="text-[#e6edf3] font-mono">{formatAssetDisplayPrice(pos.avgBuyPrice, posCurrency)}</strong></span>
+                      <span>Atual: <strong className="text-[#e6edf3] font-mono">{formatAssetDisplayPrice(pos.currentPrice, posCurrency)}</strong></span>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0 flex items-center gap-3">
                     <div>
                       <div className="text-xs sm:text-sm font-mono font-bold text-[#e6edf3]">
-                        {formatCurrencyBRL(pos.currentValue)}
+                        {formatAssetDisplayPrice(pos.currentValue, posCurrency)}
                       </div>
                       <div
                         className={`text-xs font-mono font-semibold flex items-center justify-end gap-1 ${
                           isProfit ? "text-[#00c853]" : "text-[#ff5252]"
                         }`}
                       >
-                        {isProfit ? "+" : ""}{formatCurrencyBRL(pos.profitLoss)} ({isProfit ? "+" : ""}{pos.profitLossPct.toFixed(2)}%)
+                        {isProfit ? "+" : ""}{formatAssetDisplayPrice(pos.profitLoss, posCurrency)} ({isProfit ? "+" : ""}{pos.profitLossPct.toFixed(2)}%)
                       </div>
                     </div>
 

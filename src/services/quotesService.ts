@@ -589,39 +589,46 @@ class QuotesService {
               let volumeStr = "R$ 450 Mi";
               let dataSource = "default";
 
-              // Check Finnhub for US Equities, Global Tickers & Proxies
+              // Finnhub API: Responsável exclusivamente pela Economia Global, Bolsas do Mundo, Índices e Commodities
               let finnhubData: { price: number; prevClose: number; open: number; high: number; low: number; change: number; changePercent: number } | null = null;
-              let fmpData: { price: number; prevClose: number; open: number; high: number; low: number; change: number; changePercent: number; volume?: number; yearHigh?: number; yearLow?: number } | null = null;
 
-              if (reg.category === "EUA" && !reg.symbol.startsWith("^")) {
+              const finnhubTickers: Record<string, string> = {
+                // Ações dos EUA & Globais
+                aapl: "AAPL",
+                nvda: "NVDA",
+                msft: "MSFT",
+                amzn: "AMZN",
+                googl: "GOOGL",
+                tsla: "TSLA",
+                meta: "META",
+                // Bolsas Globais & Índices
+                "sp-500": "SPY",
+                "sp-500-futuros": "SPY",
+                nasdaq: "QQQ",
+                "dow-jones": "DIA",
+                "russell-2000": "IWM",
+                dax: "EWG",
+                "ftse-100": "EWU",
+                "cac-40": "FEZ",
+                "euro-stoxx-50": "FEZ",
+                "nikkei-225": "EWJ",
+                "sse-composite": "MCHI",
+                "hang-seng": "FXI",
+                kospi: "EWY",
+                "bse-sensex": "INDA",
+                "nifty-50": "INDY",
+                "sp-latin-america": "ILF",
+                // Commodities Globais
+                "ouro-futuro": "GLD",
+                "petroleo-brent": "USO",
+                "soja-futuro": "SOYB",
+                "gas-natural": "UNG",
+              };
+
+              if (finnhubTickers[id]) {
+                finnhubData = await this.fetchFinnhubQuote(finnhubTickers[id]);
+              } else if (reg.category === "EUA" && !reg.symbol.startsWith("^")) {
                 finnhubData = await this.fetchFinnhubQuote(reg.symbol);
-                if (!finnhubData || finnhubData.price <= 0) {
-                  fmpData = await this.fetchFMPQuote(reg.symbol);
-                }
-              } else if (id === "sp-500" || id === "sp-500-futuros") {
-                finnhubData = await this.fetchFinnhubQuote("SPY");
-                if (!finnhubData || finnhubData.price <= 0) {
-                  fmpData = await this.fetchFMPQuote("SPY");
-                }
-              } else if (id === "nasdaq") {
-                finnhubData = await this.fetchFinnhubQuote("QQQ");
-                if (!finnhubData || finnhubData.price <= 0) {
-                  fmpData = await this.fetchFMPQuote("QQQ");
-                }
-              } else if (id === "dow-jones") {
-                finnhubData = await this.fetchFinnhubQuote("DIA");
-                if (!finnhubData || finnhubData.price <= 0) {
-                  fmpData = await this.fetchFMPQuote("DIA");
-                }
-              } else if (id === "usd-eur") {
-                fmpData = await this.fetchFMPQuote("EURUSD");
-              } else if (id === "ouro-futuro") {
-                fmpData = await this.fetchFMPQuote("GCUSD");
-              } else if (reg.type === "crypto") {
-                const cryptoFmpSymbol = id === "bitcoin" ? "BTCUSD" : id === "ether" ? "ETHUSD" : null;
-                if (cryptoFmpSymbol) {
-                  fmpData = await this.fetchFMPQuote(cryptoFmpSymbol);
-                }
               }
 
               if (finnhubData && finnhubData.price > 0) {
@@ -635,19 +642,6 @@ class QuotesService {
                 low52 = price * 0.75;
                 volumeStr = `US$ ${(price * 12.5).toFixed(1)} Mi`;
                 dataSource = "finnhub";
-              } else if (fmpData && fmpData.price > 0) {
-                price = fmpData.price;
-                prevClose = fmpData.prevClose || fmpData.price;
-                open = fmpData.open || prevClose;
-                high = fmpData.high || Math.max(price, prevClose);
-                low = fmpData.low || Math.min(price, prevClose);
-                sparkline = [prevClose, (prevClose + price) / 2, price];
-                high52 = fmpData.yearHigh || price * 1.25;
-                low52 = fmpData.yearLow || price * 0.75;
-                if (fmpData.volume) {
-                  volumeStr = `US$ ${(fmpData.volume / 1000000).toFixed(1)} Mi`;
-                }
-                dataSource = "fmp";
               }
               // Check AwesomeAPI next for FX & Crypto
               else if (awesomeData && awesomeData[id]) {

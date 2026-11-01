@@ -15,7 +15,7 @@ export const fetchEconomyData = async (query = 'all') => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Erro no serviço de economia geral:', error);
+    console.warn('Falha no serviço de economia geral:', error?.message || error);
     return null;
   }
 };

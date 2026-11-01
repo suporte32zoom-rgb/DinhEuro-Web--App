@@ -10,7 +10,6 @@ import { quotesService, ASSET_REGISTRY, LiveQuote } from "./src/services/quotesS
 
 dotenv.config();
 
-const __filename = typeof import.meta !== "undefined" && (import.meta as any).url ? fileURLToPath((import.meta as any).url) : "";
 const __dirname = path.resolve();
 
 const app = express();
