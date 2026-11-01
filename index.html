@@ -64,6 +64,96 @@
     </script>
 </div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- ========================================== -->
+<!-- SEÇÃO ISOLADA: MONITOR GLOBAL BINANCE     -->
+<!-- ========================================== -->
+<div id="dinheuro-modulo-binance" style="background: #121214; color: #fff; padding: 20px; border-radius: 12px; font-family: sans-serif; width: 100%; max-width: 800px; margin: 20px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #29292e; padding-bottom: 10px; margin-bottom: 15px;">
+        <h3 style="margin: 0; color: #00ff88; font-size: 18px;">DinhEuro — Hub Global de Cripto & Futuros</h3>
+        <span id="status-sincronizacao" style="font-size: 12px; color: #a1a1aa;">Sincronizado em tempo real</span>
+    </div>
+    
+    <p style="font-size: 13px; color: #a1a1aa; margin-bottom: 15px;">
+        Varredura completa de ativos spot e contratos futuros da Binance integrada ao DinhEuro.
+    </p>
+
+    <!-- Container onde a lista completa vai aparecer -->
+    <div id="lista-global-ativos" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+        <div style="text-align: center; color: #a1a1aa; padding: 20px;">Carregando cotações globais...</div>
+    </div>
+</div>
+
+<script>
+// Script isolado para não interferir nas outras APIs (Finnhub/Wellson)
+async function inicializarHubCriptoBinance() {
+    const container = document.getElementById("lista-global-ativos");
+    const statusEl = document.getElementById("status-sincronizacao");
+
+    try {
+        // Chamadas paralelas às APIs públicas da Binance (Spot e Futuros)
+        const [resSpot, resFutures] = await Promise.all([
+            fetch("https://api.binance.com/api/v3/ticker/price"),
+            fetch("https://fapi.binance.com/fapi/v1/ticker/price")
+        ]);
+
+        const dadosSpot = await resSpot.json();
+        const dadosFutures = await resFutures.json();
+
+        container.innerHTML = "";
+
+        // Função interna para criar os blocos de listagem de forma limpa
+        function injetarGrupoAtivos(titulo, lista, tipoTag, corTag) {
+            if (Array.isArray(lista) && lista.length > 0) {
+                const header = document.createElement("div");
+                header.innerHTML = `<div style="background: #1f1f23; color: #00ff88; padding: 6px 10px; font-weight: bold; font-size: 13px; border-radius: 4px; margin: 10px 0 5px 0;">${titulo} (${lista.length} ativos)</div>`;
+                container.appendChild(header);
+
+                // Exibe os ativos de forma organizada
+                lista.forEach(ativo => {
+                    const linha = document.createElement("div");
+                    linha.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #1a1a1e; font-size: 13px;";
+                    
+                    const precoNum = parseFloat(ativo.price);
+                    const precoFormatado = isNaN(precoNum) ? ativo.price : precoNum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+
+                    linha.innerHTML = `
+                        <span style="color: #e4e4e7; font-weight: 500;">
+                            ${ativo.symbol} 
+                            <span style="font-size: 9px; background: ${corTag}; color: #fff; padding: 2px 5px; border-radius: 3px; margin-left: 6px;">${tipoTag}</span>
+                        </span>
+                        <span style="font-weight: bold; color: #4ade80; font-family: monospace;">${precoFormatado}</span>
+                    `;
+                    container.appendChild(linha);
+                });
+            }
+        }
+
+        // Injeta os dados na interface
+        injetarGrupoAtivos("Mercado à Vista (Spot)", dadosSpot, "SPOT", "#27272a");
+        injetarGrupoAtivos("Contratos Futuros (Perpétuos)", dadosFutures, "FUTURES", "#1e3a8a");
+
+        if (statusEl) {
+            statusEl.innerText = "Atualizado agora";
+            statusEl.style.color = "#4ade80";
+        }
+
+    } catch (erro) {
+        console.error("Erro no Hub Cripto Binance:", erro);
+        if (container) {
+            container.innerHTML = `<div style="color: #f87171; text-align: center; padding: 20px;">Falha temporária ao sincronizar com a Binance. As demais funções do site continuam ativas.</div>`;
+        }
+    }
+}
+
+// Executa assim que o arquivo carregar
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarHubCriptoBinance();
+    // Atualiza os preços automaticamente a cada 10 segundos em segundo plano
+    setInterval(inicializarHubCriptoBinance, 10000);
+});
+</script>
+<!-- ========================================== -->
   </body>
 </html>
 
